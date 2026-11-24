@@ -1,0 +1,67 @@
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #fafbfc;
+  --surface-3: #f0f3f7;
+  --line: #e4e8ee;
+  --line-strong: #d3dae3;
+
+  /* Ink */
+  --ink: #17202b;
+  --ink-2: #465364;
+  --ink-3: #8592a3;
+
+  /* Brand */
+  --brand: #2f7cf6;
+  --brand-strong: #1f66e0;
+  --brand-soft: #eaf2ff;
+  --brand-line: #bed5fc;
+
+  /* Sidebar */
+  --sidebar: #1d2b3b;
+  --sidebar-2: #243447;
+  --sidebar-3: #2c3e53;
+  --sidebar-ink: #c4cfdc;
+  --sidebar-ink-dim: #8494a7;
+
+  /* Status */
+  --ok: #17883c;
+  --ok-soft: #e6f6eb;
+  --ok-line: #b9e2c6;
+  --warn: #b45309;
+  --warn-soft: #fff4e2;
+  --warn-line: #f2d5a6;
+  --danger: #c02a2a;
+  --danger-soft: #fdeceb;
+  --danger-line: #f2c4c1;
+  --info: #2f7cf6;
+  --info-soft: #eaf2ff;
+  --info-line: #bed5fc;
+  --muted: #6b7a8c;
+  --muted-soft: #eef1f5;
+  --muted-line: #dbe1e9;
+
+  /* Radius */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+  --r-pill: 999px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(20, 30, 45, 0.04);
+  --shadow-md: 0 8px 24px rgba(20, 30, 45, 0.08);
+  --shadow-lg: 0 24px 60px rgba(12, 22, 36, 0.2);
+
+  /* Type */
+  --font-sans: "Segoe UI", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei",
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", "SF Mono", Consolas, "Roboto Mono", monospace;
+
+  /* Layout */
+  --sidebar-w: 230px;
+  --topbar-h: 68px;
+  --page-max: 1600px;
+}
