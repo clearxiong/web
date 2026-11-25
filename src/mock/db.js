@@ -268,7 +268,8 @@ const SOURCE_LABEL = {
   storage: '存储',
   upload: '上报',
   network: '网络',
-  diagnostics: '自检'
+  diagnostics: '自检',
+  module: '模块'
 }
 
 function seedSyslog() {
@@ -827,6 +828,28 @@ export function exportConfigText() {
 export function upgradeFirmware(version = 'v1.1.0') {
   pushLog('WARN', 'system', `固件升级开始，目标版本 ${version}`)
   return { version }
+}
+
+// 通过 I²C 逐模块烧写 STM32 从机固件
+export function upgradeStm32Firmware(moduleIds = [], version = '1.5.0') {
+  const ids = Array.isArray(moduleIds) ? moduleIds : [moduleIds]
+  const targets = state.modules.filter((m) => ids.includes(m.module_id))
+  if (!targets.length) throw new Error('请选择需要升级的模块')
+  const offline = targets.find((m) => !m.online)
+  if (offline) throw new Error(`模块 ${offline.module_id} 当前离线，无法升级`)
+  const done = []
+  targets.forEach((m) => {
+    m.firmware = version
+    m.restart_count += 1
+    m.last_communication_time = iso(Date.now())
+    done.push({ module_id: m.module_id, firmware: m.firmware })
+  })
+  pushLog(
+    'WARN',
+    'module',
+    `STM32 模块固件升级完成：M${targets.map((m) => m.module_id).join(' / M')} → v${version}`
+  )
+  return { version, modules: done }
 }
 
 export { formatDateTime, formatDate, formatUptime, MODULE_COUNT, CHANNEL_COUNT }

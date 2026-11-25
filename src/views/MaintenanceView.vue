@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
@@ -23,6 +23,130 @@ let upgradeTimer = null
 
 const currentVersion = ref('v1.0.0')
 const targetVersion = 'v1.1.0'
+
+// ---------- STM32 模块固件升级 ----------
+const STM32_TARGET = '1.5.0'
+
+const stm32Input = ref(null)
+const stm32File = ref(null)
+const stm32Modules = ref([])
+const stm32Selected = ref([])
+const stm32Busy = ref(false)
+const stm32Overall = ref(0)
+const stm32Stage = ref('')
+const stm32Status = ref({})
+let stm32Aborted = false
+
+const selectableModules = computed(() => stm32Modules.value.filter((m) => m.online))
+const allSelected = computed(
+  () =>
+    selectableModules.value.length > 0 &&
+    selectableModules.value.every((m) => stm32Selected.value.includes(m.module_id))
+)
+
+async function loadModules() {
+  const device = await api.getDevice()
+  stm32Modules.value = (device.modules || []).map((m) => ({
+    module_id: m.module_id,
+    address: m.address,
+    firmware: m.firmware,
+    online: m.online,
+    channel_ids: m.channel_ids || []
+  }))
+  stm32Selected.value = stm32Modules.value
+    .filter((m) => m.online && m.firmware !== STM32_TARGET)
+    .map((m) => m.module_id)
+}
+
+function toggleAll() {
+  if (stm32Busy.value) return
+  stm32Selected.value = allSelected.value
+    ? []
+    : selectableModules.value.map((m) => m.module_id)
+}
+
+function pickStm32() {
+  if (stm32Busy.value) return
+  stm32Input.value?.click()
+}
+
+function onStm32Change(e) {
+  const file = e.target.files?.[0]
+  e.target.value = ''
+  if (!file) return
+  if (!/\.(bin|hex)$/i.test(file.name)) {
+    toast.error('请选择 .bin 或 .hex 模块固件')
+    return
+  }
+  if (file.size > 1024 * 1024) {
+    toast.error('模块固件不能超过 1 MB')
+    return
+  }
+  stm32File.value = file
+}
+
+function askStm32() {
+  if (stm32Busy.value) return
+  if (!stm32File.value) {
+    toast.error('请先选择模块固件文件')
+    return
+  }
+  if (!stm32Selected.value.length) {
+    toast.error('请至少选择一个待升级模块')
+    return
+  }
+  ask('stm32')
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+async function runStm32Upgrade() {
+  const ids = [...stm32Selected.value]
+  stm32Aborted = false
+  stm32Busy.value = true
+  stm32Overall.value = 0
+  stm32Stage.value = '正在准备升级…'
+  stm32Status.value = Object.fromEntries(ids.map((id) => [id, { state: 'pending', progress: 0 }]))
+
+  try {
+    for (let i = 0; i < ids.length; i++) {
+      if (stm32Aborted) return
+      const id = ids[i]
+      const mod = stm32Modules.value.find((m) => m.module_id === id)
+      stm32Status.value[id] = { state: 'running', progress: 0 }
+      await api.log('INFO', 'module', `开始升级模块 ${id}（${mod?.address || '—'}）固件至 v${STM32_TARGET}`)
+
+      for (let p = 0; p <= 100; p += 4) {
+        if (stm32Aborted) return
+        stm32Status.value[id].progress = p
+        stm32Overall.value = Math.round(((i + p / 100) / ids.length) * 100)
+        stm32Stage.value =
+          p < 25
+            ? `模块 ${id}：正在校验镜像…`
+            : p < 70
+              ? `模块 ${id}：正在通过 I²C 传输…`
+              : p < 96
+                ? `模块 ${id}：正在写入 Flash…`
+                : `模块 ${id}：正在重启模块…`
+        await sleep(45)
+      }
+
+      await api.upgradeStm32Firmware([id], STM32_TARGET)
+      if (mod) mod.firmware = STM32_TARGET
+      stm32Status.value[id] = { state: 'done', progress: 100 }
+    }
+
+    stm32Overall.value = 100
+    stm32Stage.value = '升级完成'
+    stm32File.value = null
+    stm32Selected.value = []
+    toast.success(`已将 ${ids.length} 个模块升级至 v${STM32_TARGET}`)
+  } catch (err) {
+    toast.error(err.message || '模块升级失败')
+  } finally {
+    stm32Busy.value = false
+  }
+}
 
 const dialog = computed(() => {
   if (action.value === 'reboot') {
@@ -49,6 +173,15 @@ const dialog = computed(() => {
       message: `将使用「${importFile.value?.name || '所选文件'}」覆盖当前设备配置。`,
       detail: '导入前请确认文件来自可信来源，导入后需要重启设备生效。',
       confirmText: '导入配置',
+      tone: 'warn'
+    }
+  }
+  if (action.value === 'stm32') {
+    return {
+      title: '升级 STM32 模块固件？',
+      message: `将向 M${stm32Selected.value.join(' / M')} 共 ${stm32Selected.value.length} 个模块写入「${stm32File.value?.name || '所选固件'}」，目标版本 v${STM32_TARGET}。`,
+      detail: '升级按模块依次进行，期间对应 4 路通道暂停采集，状态短暂显示为「未知」。',
+      confirmText: '开始升级',
       tone: 'warn'
     }
   }
@@ -108,6 +241,11 @@ function ask(actionName) {
 }
 
 async function onConfirm() {
+  if (action.value === 'stm32') {
+    action.value = ''
+    runStm32Upgrade()
+    return
+  }
   busy.value = true
   try {
     if (action.value === 'reboot') {
@@ -164,7 +302,10 @@ async function finishUpgrade() {
   }, 900)
 }
 
+onMounted(loadModules)
+
 onBeforeUnmount(() => {
+  stm32Aborted = true
   if (upgradeTimer) clearInterval(upgradeTimer)
 })
 </script>
@@ -174,7 +315,7 @@ onBeforeUnmount(() => {
     <div class="page-head">
       <div>
         <h1 class="page-title">维护</h1>
-        <p class="page-sub">配置备份、设备重启、恢复出厂与固件升级</p>
+        <p class="page-sub">配置备份、设备重启、恢复出厂，以及 ESP32 与 STM32 模块固件升级</p>
       </div>
       <StatusBadge tone="ok" label="管理员权限" plain />
     </div>
@@ -312,6 +453,125 @@ onBeforeUnmount(() => {
           <div class="warn-box">
             <AppIcon name="alert" :size="16" />
             <p>固件升级过程中请勿断电。升级失败时设备应自动回滚到上一可用版本。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card span-2 stm32-card">
+        <div class="card-head">
+          <div>
+            <h3 class="card-title">STM32 模块固件升级</h3>
+            <p class="card-sub">通过 I²C 逐模块烧写 4 个采集模块的 STM32 从机固件</p>
+          </div>
+          <span class="card-icon"><AppIcon name="channels" :size="18" /></span>
+        </div>
+        <div class="card-body">
+          <div class="stm32-table">
+            <div class="stm32-head">
+              <label class="cb">
+                <input type="checkbox" :checked="allSelected" :disabled="stm32Busy" @change="toggleAll" />
+                <span>模块</span>
+              </label>
+              <span>I²C 地址</span>
+              <span>监测通道</span>
+              <span>当前固件</span>
+              <span>运行状态</span>
+              <span>升级状态</span>
+            </div>
+
+            <label
+              v-for="m in stm32Modules"
+              :key="m.module_id"
+              class="stm32-row"
+              :class="{ disabled: !m.online || stm32Busy }"
+            >
+              <span class="cb">
+                <input
+                  v-model="stm32Selected"
+                  type="checkbox"
+                  :value="m.module_id"
+                  :disabled="!m.online || stm32Busy"
+                />
+                <b>M{{ m.module_id }}</b>
+              </span>
+              <span class="mono">{{ m.address }}</span>
+              <span class="mono">
+                CH{{ String(m.channel_ids[0] ?? 0).padStart(2, '0') }}–CH{{
+                  String(m.channel_ids[m.channel_ids.length - 1] ?? 0).padStart(2, '0')
+                }}
+              </span>
+              <span class="mono">{{ m.firmware }}</span>
+              <StatusBadge :tone="m.online ? 'ok' : 'muted'" :label="m.online ? '在线' : '离线'" plain />
+              <span class="stm32-state">
+                <template v-if="stm32Status[m.module_id]?.state === 'running'">
+                  <span class="state-run mono">{{ stm32Status[m.module_id].progress }}%</span>
+                </template>
+                <template v-else-if="stm32Status[m.module_id]?.state === 'done'">
+                  <span class="state-ok">已完成</span>
+                </template>
+                <template v-else>
+                  <span class="muted">{{ m.firmware === STM32_TARGET ? '已是最新' : '待升级' }}</span>
+                </template>
+              </span>
+            </label>
+
+            <div v-if="!stm32Modules.length" class="stm32-empty">正在读取模块信息…</div>
+          </div>
+
+          <div class="version-row stm32-actions">
+            <div class="version-box">
+              <span>已选模块</span>
+              <b>{{ stm32Selected.length }} / {{ selectableModules.length }}</b>
+              <em>仅在线模块可升级</em>
+            </div>
+            <AppIcon name="chevron" :size="16" class="version-arrow" />
+            <div class="version-box next">
+              <span>目标版本</span>
+              <b class="mono">v{{ STM32_TARGET }}</b>
+              <em>STM32 从机固件</em>
+            </div>
+            <div class="version-actions">
+              <input ref="stm32Input" class="file-hidden" type="file" accept=".bin,.hex" @change="onStm32Change" />
+              <button class="btn" :disabled="stm32Busy" @click="pickStm32">
+                <AppIcon name="file" :size="15" />选择固件
+              </button>
+              <button
+                class="btn primary"
+                :disabled="!stm32File || !stm32Selected.length || stm32Busy"
+                @click="askStm32"
+              >
+                <AppIcon name="upload" :size="15" />开始升级
+              </button>
+            </div>
+          </div>
+
+          <div v-if="stm32File" class="file-chip">
+            <AppIcon name="file" :size="15" />
+            <span>{{ stm32File.name }}</span>
+            <em>{{ (stm32File.size / 1024).toFixed(1) }} KB</em>
+            <button class="file-clear" aria-label="移除" @click="stm32File = null">
+              <AppIcon name="close" :size="13" />
+            </button>
+          </div>
+          <p v-else class="hint">
+            支持 .bin / .hex，最大 1 MB。默认勾选固件版本低于 v{{ STM32_TARGET }} 的在线模块。
+          </p>
+
+          <div v-if="stm32Busy" class="upgrade-progress">
+            <div class="upgrade-top">
+              <span>{{ stm32Stage }}</span>
+              <b class="mono">{{ stm32Overall }}%</b>
+            </div>
+            <div class="progress"><span :style="{ width: stm32Overall + '%' }"></span></div>
+            <p class="hint">升级按模块依次进行，请勿关闭设备电源。演示环境使用模拟进度。</p>
+          </div>
+
+          <div class="warn-box">
+            <AppIcon name="alert" :size="16" />
+            <p>
+              模块升级期间对应 4 路通道暂停采集，状态短暂显示为「未知」。
+              升级失败的模块会自动回滚到上一可用版本，可修正固件文件后重新尝试。
+            </p>
           </div>
         </div>
       </section>
@@ -468,6 +728,82 @@ onBeforeUnmount(() => {
   border: 1px solid var(--brand-line);
   background: var(--brand-soft);
   border-radius: 10px;
+}
+
+/* ---------- STM32 模块升级 ---------- */
+.stm32-table {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow-x: auto;
+  background: var(--surface);
+}
+.stm32-head,
+.stm32-row {
+  display: grid;
+  grid-template-columns: 1.05fr 0.85fr 1.15fr 0.85fr 0.85fr 0.9fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  min-width: 620px;
+  font-size: 12px;
+}
+.stm32-head {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 600;
+}
+.stm32-row {
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.stm32-row:last-of-type {
+  border-bottom: none;
+}
+.stm32-row:hover:not(.disabled) {
+  background: var(--surface-2);
+}
+.stm32-row.disabled {
+  cursor: not-allowed;
+  color: var(--ink-3);
+}
+.cb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cb input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--brand);
+  cursor: inherit;
+  flex: none;
+}
+.cb b {
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.stm32-state {
+  font-size: 11.5px;
+}
+.state-run {
+  color: var(--brand);
+  font-weight: 700;
+}
+.state-ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+.stm32-empty {
+  padding: 18px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.stm32-actions {
+  margin-top: 16px;
 }
 .upgrade-top {
   display: flex;

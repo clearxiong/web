@@ -17,6 +17,7 @@ import {
   factoryReset,
   exportConfigText,
   upgradeFirmware,
+  upgradeStm32Firmware,
   injectEvent,
   pushLog,
   EVENT_TYPES,
@@ -132,6 +133,11 @@ export const api = {
   // POST /api/v1/maintenance/upgrade
   upgradeFirmware(version) {
     return respond(() => upgradeFirmware(version))
+  },
+
+  // POST /api/v1/maintenance/stm32-upgrade
+  upgradeStm32Firmware(moduleIds, version) {
+    return respond(() => upgradeStm32Firmware(moduleIds, version))
   },
 
   // POST /api/v1/debug/inject-event（仅 mock 演示）
