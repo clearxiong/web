@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
 import ChannelCard from '../components/ChannelCard.vue'
 import ChannelDetailDrawer from '../components/ChannelDetailDrawer.vue'
-import LifeBar from '../components/LifeBar.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import EmptyState from '../components/EmptyState.vue'
 import { useDeviceStore } from '../stores/device'
@@ -21,9 +20,9 @@ const activeChannel = ref(null)
 const statusMeta = [
   { key: '', label: '全部' },
   { key: 'NORMAL', label: '正常', tone: 'ok' },
-  { key: 'ALARM', label: '事件触发', tone: 'warn' },
-  { key: 'FAIL', label: '状态异常', tone: 'danger' },
-  { key: 'OFFLINE', label: '监测失效', tone: 'muted' },
+  { key: 'ALARM', label: '触发/锁存', tone: 'warn' },
+  { key: 'FAIL', label: '接口异常', tone: 'danger' },
+  { key: 'OFFLINE', label: '模块离线', tone: 'muted' },
   { key: 'UNKNOWN', label: '未知', tone: 'info' }
 ]
 
@@ -50,7 +49,7 @@ const filtered = computed(() => {
   return channels.value.filter((c) => {
     if (statusFilter.value && c.status !== statusFilter.value) return false
     if (moduleFilter.value && c.module_id !== Number(moduleFilter.value)) return false
-    if (kw && !`${c.name} ${c.location} ${c.status_label}`.toLowerCase().includes(kw)) return false
+    if (kw && !`${c.name} ${c.kind_name} ${c.state_label} M${c.module_id} ${c.module_address}`.toLowerCase().includes(kw)) return false
     return true
   })
 })
@@ -74,7 +73,7 @@ onMounted(refresh)
     <div class="page-head">
       <div>
         <h1 class="page-title">通道状态</h1>
-        <p class="page-sub">16 路浪涌保护通道的实时状态、模块寿命与最近事件</p>
+        <p class="page-sub">4 个 STM32 模块共 16 个接口通道的实时状态与最近事件</p>
       </div>
       <div class="row">
         <div class="segmented" role="group" aria-label="视图切换">
@@ -111,7 +110,7 @@ onMounted(refresh)
         </div>
         <div class="search">
           <AppIcon name="search" :size="15" />
-          <input v-model="keyword" class="input" type="search" placeholder="搜索通道 / 位置" />
+          <input v-model="keyword" class="input" type="search" placeholder="搜索通道 / 接口类型" />
         </div>
         <button class="btn sm ghost" @click="resetFilters">重置</button>
       </div>
@@ -123,14 +122,12 @@ onMounted(refresh)
           <thead>
             <tr>
               <th>通道</th>
+              <th>接口类型</th>
               <th>所属模块</th>
-              <th>霍尔比较器</th>
-              <th>光敏状态</th>
-              <th style="min-width: 150px">模块寿命</th>
-              <th class="num">浪涌计数</th>
+              <th style="min-width: 120px">模块寿命</th>
+              <th class="num">事件次数</th>
               <th>最近事件</th>
-              <th>安装位置</th>
-              <th>状态</th>
+              <th>接口状态</th>
               <th></th>
             </tr>
           </thead>
@@ -139,27 +136,19 @@ onMounted(refresh)
               <td>
                 <span class="ch-name">{{ ch.name }}</span>
               </td>
+              <td>{{ ch.kind_name }}</td>
               <td>
                 <span class="mono">{{ ch.module_address }}</span>
                 <span class="muted"> · M{{ ch.module_id }}</span>
               </td>
               <td>
-                <span class="row" style="gap: 6px">
-                  <i class="dot" :class="ch.hall_state ? 'warn' : 'ok'"></i>{{ ch.hall_label }}
+                <span class="mono" :class="{ 'life-low': ch.module_life_percent < 80 }">
+                  {{ ch.module_life_percent }}%
                 </span>
-              </td>
-              <td>
-                <span class="row" style="gap: 6px">
-                  <i class="dot" :class="ch.optical_tone"></i>{{ ch.optical_label }}
-                </span>
-              </td>
-              <td>
-                <LifeBar :percent="ch.life_percent" :threshold="ch.alarm_threshold" />
               </td>
               <td class="num strong">{{ ch.event_count }}</td>
               <td class="nowrap">{{ ch.last_event_time ? timeAgo(ch.last_event_time) : '—' }}</td>
-              <td class="loc">{{ ch.location }}</td>
-              <td><StatusBadge :tone="toneMap[ch.status]" :label="ch.status_label" /></td>
+              <td><StatusBadge :tone="toneMap[ch.status]" :label="ch.state_label" /></td>
               <td class="arrow"><AppIcon name="chevron" :size="14" /></td>
             </tr>
           </tbody>
@@ -205,6 +194,10 @@ onMounted(refresh)
 </template>
 
 <style scoped>
+.life-low {
+  color: var(--danger);
+  font-weight: 700;
+}
 .filter-card {
   display: flex;
   align-items: center;

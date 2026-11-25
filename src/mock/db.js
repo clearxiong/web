@@ -76,21 +76,58 @@ const MODULE_META = [
   { module_id: 4, address: '0x23', firmware: '1.4.2' }
 ]
 
-const LOCATIONS = [
-  'A 区弱电井 · 1F',
-  'A 区弱电井 · 2F',
-  'B 区机柜 · 1F',
-  'B 区机柜 · 2F',
-  'C 区室外立杆 · 东侧',
-  'C 区室外立杆 · 西侧',
-  'D 区监控机房',
-  'D 区门禁机柜'
+// 防雷模块（可更换的 SPD 单元）：寿命、雷击计数、告警阈值、安装位置都在模块级
+const MODULE_BASE = [
+  { life_percent: 86, location: 'A 区弱电井 · 1F', reset_mode: 'Accumulate' },
+  { life_percent: 94, location: 'B 区机柜 · 1F', reset_mode: 'Accumulate' },
+  { life_percent: 72, location: 'C 区室外立杆 · 东侧', reset_mode: 'Reset' },
+  { life_percent: 91, location: 'D 区监控机房', reset_mode: 'Accumulate' }
 ]
 
-// 基准计数与寿命（模拟长期累计值）
-const BASE_COUNTS = [342, 118, 486, 75, 264, 610, 92, 158, 402, 221, 138, 528, 86, 312, 194, 468]
-const BASE_LIFE = [86, 94, 72, 96, 88, 64, 95, 91, 78, 90, 93, 68, 96, 84, 89, 74]
 
+// 每个 STM32 模块的 4 个接口通道：霍尔 GPIO / 光敏采集 / 事件锁存 / I2C 从机
+const INTERFACE_SLOTS = [
+  {
+    slot: 1,
+    kind: 'HALL',
+    name: '霍尔比较器',
+    desc: '霍尔比较器 GPIO，外部中断捕获浪涌阈值触发'
+  },
+  {
+    slot: 2,
+    kind: 'OPTICAL',
+    name: '光敏采集',
+    desc: '周期性读取光敏检测状态，识别器件劣化'
+  },
+  {
+    slot: 3,
+    kind: 'LATCH',
+    name: '事件锁存',
+    desc: 'STM32 锁存事件序号与时间，等待 ESP32 读取'
+  },
+  {
+    slot: 4,
+    kind: 'I2C',
+    name: 'I2C 从机',
+    desc: '与 ESP32 主机的 I²C 从机通信通道'
+  }
+]
+
+const SLOT_OF_TYPE = {
+  HALL_TRIGGER: 1,
+  OPTICAL_CHANGE: 2,
+  QUEUE_OVERFLOW: 3,
+  MODULE_OFFLINE: 4,
+  COMM_ERROR: 4
+}
+
+// 每个接口通道的基准事件计数（模拟长期累计值），顺序：M1~M4 × 4 个接口
+const BASE_COUNTS = [
+  1280, 12, 61, 8,
+  1120, 24, 55, 37,
+  1105, 15, 48, 12,
+  1005, 9, 37, 6
+]
 const state = {
   bootId: 47,
   bootedAt: START - (6 * DAY + 4 * 60 * 60 * 1000 + 23 * 60 * 1000),
@@ -103,7 +140,6 @@ const state = {
   channels: [],
   modules: [],
   config: null,
-  surgeSettings: [],
   eventsGenerated: false
 }
 
@@ -112,30 +148,35 @@ function buildChannels() {
   const list = []
   for (let i = 1; i <= CHANNEL_COUNT; i++) {
     const moduleId = Math.ceil(i / 4)
-    let status = 'NORMAL'
+    const slot = INTERFACE_SLOTS[(i - 1) % 4]
     let optical = 'NORMAL'
+    let forced = ''
+    let fault = 0
     if (i === 6) {
-      status = 'FAIL'
+      // 模块 2 的光敏采集通道反馈异常
       optical = 'ABNORMAL'
+      forced = 'FAIL'
+      fault = 0x0310
     } else if (i === 9) {
-      status = 'UNKNOWN'
-      optical = 'UNKNOWN'
+      // 模块 3 的霍尔输入状态暂不可确认
+      forced = 'UNKNOWN'
+      fault = 0x0500
     }
     list.push({
       channel_id: i,
       name: `CH${pad(i)}`,
       module_id: moduleId,
       module_address: MODULE_META[moduleId - 1].address,
-      location: LOCATIONS[(i - 1) % LOCATIONS.length],
+      slot: slot.slot,
+      kind: slot.kind,
+      kind_name: slot.name,
+      kind_desc: slot.desc,
       hall_state: 0,
       optical_state: optical,
       communication_state: 'ONLINE',
-      protector_state: status,
-      fault_code: status === 'FAIL' ? 0x0310 : status === 'UNKNOWN' ? 0x0500 : 0,
+      forced_status: forced,
+      fault_code: fault,
       event_count: BASE_COUNTS[i - 1],
-      life_percent: BASE_LIFE[i - 1],
-      reset_mode: i % 5 === 0 ? 'Reset' : 'Accumulate',
-      alarm_threshold: 80,
       last_event_time: null,
       last_event_at: 0,
       alarm_until: 0
@@ -147,8 +188,11 @@ function buildChannels() {
 function buildModules() {
   return MODULE_META.map((meta, idx) => {
     const channelIds = [idx * 4 + 1, idx * 4 + 2, idx * 4 + 3, idx * 4 + 4]
+    const base = MODULE_BASE[idx]
     return {
       ...meta,
+      ...base,
+      alarm_threshold: 80,
       online: true,
       heartbeat_counter: randInt(180000, 420000),
       communication_error_count: idx === 2 ? 37 : randInt(0, 9),
@@ -197,12 +241,14 @@ function makeEvent(ms, channelId, type, level) {
 }
 
 function seedEvents() {
-  const channelWeights = state.channels.map((c) => c.event_count + 40)
-  const totalWeight = channelWeights.reduce((a, b) => a + b, 0)
-  const weightPick = () => {
+  const moduleWeights = state.modules.map(
+    (m) => state.channels.filter((c) => c.module_id === m.module_id).reduce((sum, c) => sum + c.event_count, 0) + 40
+  )
+  const totalWeight = moduleWeights.reduce((a, b) => a + b, 0)
+  const modulePick = () => {
     let r = rand() * totalWeight
-    for (let i = 0; i < channelWeights.length; i++) {
-      r -= channelWeights[i]
+    for (let i = 0; i < moduleWeights.length; i++) {
+      r -= moduleWeights[i]
       if (r <= 0) return i + 1
     }
     return 1
@@ -225,7 +271,8 @@ function seedEvents() {
     else if (type === 'OPTICAL_CHANGE') level = 2
     else if (rand() > 0.78) level = 2
 
-    const channelId = weightPick()
+    // 事件按类型落到对应的接口通道：霍尔 1 / 光敏 2 / 锁存 3 / I2C 4
+    const channelId = (modulePick() - 1) * 4 + (SLOT_OF_TYPE[type] || 1)
     const ms = START - Math.floor(rand() * 30 * DAY) - randInt(0, 3600 * 1000)
     list.push(makeEvent(ms, channelId, type, level))
   }
@@ -339,14 +386,6 @@ function seedConfig() {
       last_success: formatDateTime(nowMs - 18 * 1000)
     }
   }
-  state.surgeSettings = state.channels.map((c) => ({
-    channel_id: c.channel_id,
-    reset_mode: c.reset_mode,
-    alarm_threshold: c.alarm_threshold,
-    location: c.location,
-    life_percent: c.life_percent,
-    event_count: c.event_count
-  }))
 }
 
 // ---------------- 初始化 ----------------
@@ -364,43 +403,87 @@ ensureInit()
 
 // ---------------- 派生数据 ----------------
 function channelView(ch) {
-  let status = ch.protector_state
-  if (ch.alarm_until > Date.now()) status = 'ALARM'
+  const mod = state.modules.find((m) => m.module_id === ch.module_id)
+  const now = Date.now()
+  let status = 'NORMAL'
+  let stateLabel = '正常'
+
+  if (!mod || !mod.online) {
+    status = 'OFFLINE'
+    stateLabel = '模块离线'
+  } else if (ch.forced_status) {
+    status = ch.forced_status
+    stateLabel = status === 'FAIL' ? '异常' : '未知'
+  } else if (ch.kind === 'HALL') {
+    const triggered = ch.alarm_until > now
+    status = triggered ? 'ALARM' : 'NORMAL'
+    stateLabel = triggered ? '已触发' : '未触发'
+  } else if (ch.kind === 'OPTICAL') {
+    if (ch.optical_state === 'ABNORMAL') {
+      status = 'FAIL'
+      stateLabel = '异常'
+    } else if (ch.optical_state === 'UNKNOWN') {
+      status = 'UNKNOWN'
+      stateLabel = '未知'
+    }
+  } else if (ch.kind === 'LATCH') {
+    const pending = mod.pending_event_count || 0
+    status = pending > 0 ? 'ALARM' : 'NORMAL'
+    stateLabel = pending > 0 ? `锁存 ${pending} 条` : '空闲'
+  } else {
+    status = ch.communication_state === 'OFFLINE' ? 'OFFLINE' : 'NORMAL'
+    stateLabel = status === 'NORMAL' ? '在线' : '通信异常'
+  }
+
   const health =
-    status === 'FAIL' || status === 'OFFLINE'
-      ? 'fault'
-      : status === 'UNKNOWN'
-        ? 'unknown'
-        : ch.life_percent < ch.alarm_threshold
-          ? 'warning'
-          : ch.life_percent < 90
-            ? 'attention'
-            : 'good'
-  const healthText = {
-    good: '寿命余量充足，无需处理',
-    attention: '长期运行，建议纳入例行巡检',
-    warning: '寿命接近告警阈值，建议计划更换模块',
-    fault: '监测信号异常，请检查光敏检测回路',
-    unknown: '状态暂不可确认，等待下一次采集',
-    offline: '模块离线，当前通道监测失效'
-  }[status === 'OFFLINE' ? 'offline' : health]
+    status === 'FAIL' || status === 'OFFLINE' ? 'fault' : status === 'UNKNOWN' ? 'unknown' : status === 'ALARM' ? 'attention' : 'good'
+
+  const healthText =
+    status === 'OFFLINE'
+      ? '所属模块离线，该接口不可用'
+      : status === 'FAIL'
+        ? '光敏反馈异常，请检查光敏检测回路'
+        : status === 'UNKNOWN'
+          ? '输入状态暂不可确认，等待下一次采集'
+          : status === 'ALARM'
+            ? ch.kind === 'LATCH'
+              ? '有事件已锁存，等待 ESP32 读取'
+              : '刚捕获到阈值触发，模块仍在正常工作'
+            : {
+                HALL: '霍尔比较器输入正常，可捕获阈值触发',
+                OPTICAL: '光敏检测状态正常',
+                LATCH: '事件锁存空闲，无待读取事件',
+                I2C: 'I2C 从机通信正常'
+              }[ch.kind]
+
   return {
     ...ch,
+    location: mod ? mod.location : '—',
+    module_life_percent: mod ? mod.life_percent : 0,
+    module_life_text: mod ? `模块 ${mod.module_id} 剩余寿命 ${mod.life_percent}%` : '—',
     status,
     status_label: CHANNEL_STATUS[status]?.label || status,
+    state_label: stateLabel,
     hall_label: HALL_LABEL[ch.hall_state] || '未知',
     optical_label: OPTICAL_STATE[ch.optical_state]?.label || '未知',
     optical_tone: OPTICAL_STATE[ch.optical_state]?.tone || 'muted',
     health,
-    health_text: healthText,
-    alarm_threshold: ch.alarm_threshold
+    health_text: healthText
   }
 }
 
 function moduleView(m) {
   const pending = Math.min(m.queue_capacity, m.pending_event_count)
+  const hall = state.channels.find((c) => c.module_id === m.module_id && c.kind === 'HALL')
+  const eventCount = hall ? hall.event_count : 0
+  const status = !m.online ? 'OFFLINE' : m.life_percent < m.alarm_threshold ? 'ALARM' : 'NORMAL'
+  const statusLabel = { NORMAL: '正常', ALARM: '寿命告警', OFFLINE: '离线' }[status] || status
   return {
     ...m,
+    event_count: eventCount,
+    status,
+    status_label: statusLabel,
+    life_remaining: m.life_percent,
     online_label: m.online ? '在线' : '离线',
     queue_used: pending,
     queue_free: m.queue_capacity - pending,
@@ -415,7 +498,9 @@ function deviceView() {
   const unknownChannels = channels.filter((c) => c.status === 'UNKNOWN')
   const lastEvent = state.events[state.events.length - 1]
   const uptime = Math.floor((Date.now() - state.bootedAt) / 1000)
-  const totalEvents = state.channels.reduce((sum, c) => sum + c.event_count, 0)
+  const totalEvents = state.channels
+    .filter((c) => c.kind === 'HALL')
+    .reduce((sum, c) => sum + c.event_count, 0)
   return {
     device: {
       ...state.config.system,
@@ -497,12 +582,13 @@ function statistics() {
   }))
 
   return {
-    total_event_count: channels.reduce((sum, c) => sum + c.event_count, 0),
+    total_event_count: channels
+      .filter((c) => c.kind === 'HALL')
+      .reduce((sum, c) => sum + c.event_count, 0),
     channel_event_count: channels.map((c) => ({
       channel_id: c.channel_id,
-      label: c.name,
-      count: c.event_count,
-      life_percent: c.life_percent
+      label: `${c.name} ${c.kind_name}`,
+      count: c.event_count
     })),
     module_event_count: moduleCounts,
     daily_event_count: daily[daily.length - 1].count,
@@ -519,9 +605,9 @@ function statistics() {
       count
     })),
     health_summary: {
-      good: channels.filter((c) => c.life_percent >= 90).length,
-      attention: channels.filter((c) => c.life_percent < 90 && c.life_percent >= 80).length,
-      warning: channels.filter((c) => c.life_percent < 80).length
+      good: state.modules.filter((m) => m.life_percent >= 90).length,
+      attention: state.modules.filter((m) => m.life_percent < 90 && m.life_percent >= 80).length,
+      warning: state.modules.filter((m) => m.life_percent < 80).length
     }
   }
 }
@@ -580,8 +666,8 @@ export function tick() {
     })
     state.channels.forEach((c) => {
       if (c.alarm_until && c.alarm_until < now) {
-        if (c.protector_state === 'ALARM') c.protector_state = 'NORMAL'
         c.alarm_until = 0
+        c.hall_state = 0
       }
     })
   }
@@ -590,15 +676,18 @@ export function tick() {
 export function injectEvent(channelId) {
   ensureInit()
   tick()
-  const ch =
-    state.channels.find((c) => c.channel_id === channelId) ||
-    state.channels[Math.floor(rand() * state.channels.length)]
+  // 浪涌事件只落在霍尔比较器接口通道上；传入其它接口时取同模块的霍尔通道
+  const requested = state.channels.find((c) => c.channel_id === channelId)
+  const moduleId = requested ? requested.module_id : randInt(1, MODULE_COUNT)
+  const ch = state.channels.find((c) => c.module_id === moduleId && c.kind === 'HALL')
   const now = Date.now()
+  const owner = state.modules.find((m) => m.module_id === ch.module_id)
   ch.event_count += 1
-  ch.life_percent = clamp(Number((ch.life_percent - 0.15).toFixed(1)), 1, 100)
+  if (owner) {
+    owner.life_percent = clamp(Number((owner.life_percent - 0.15).toFixed(1)), 1, 100)
+  }
   ch.last_event_at = now
   ch.last_event_time = iso(now)
-  ch.protector_state = 'ALARM'
   ch.alarm_until = now + 4000
   ch.hall_state = 1
   setTimeout(() => {
@@ -702,6 +791,7 @@ export function getChannelDetail(channelId) {
   const ch = state.channels.find((c) => c.channel_id === Number(channelId))
   if (!ch) return null
   const view = channelView(ch)
+  const mod = state.modules.find((m) => m.module_id === ch.module_id)
   const events = state.events
     .filter((e) => e.channel_id === ch.channel_id)
     .sort((a, b) => b.timestamp_ms - a.timestamp_ms)
@@ -725,7 +815,7 @@ export function getChannelDetail(channelId) {
       ).length
     })
   }
-  return { channel: view, events, daily }
+  return { channel: view, module: mod ? moduleView(mod) : null, events, daily }
 }
 
 export function getDevice() {
@@ -764,33 +854,38 @@ export function saveConfig(next) {
 
 export function getSurgeSettings() {
   tick()
-  return state.surgeSettings.map((s) => {
-    const ch = state.channels.find((c) => c.channel_id === s.channel_id)
+  return state.modules.map((m) => {
+    const view = moduleView(m)
     return {
-      ...s,
-      channel_name: ch.name,
-      life_percent: ch.life_percent,
-      event_count: ch.event_count,
-      status: channelView(ch).status,
-      status_label: CHANNEL_STATUS[channelView(ch).status].label
+      module_id: m.module_id,
+      module_name: `模块 ${m.module_id}`,
+      address: m.address,
+      reset_mode: m.reset_mode,
+      alarm_threshold: m.alarm_threshold,
+      location: m.location,
+      life_percent: m.life_percent,
+      event_count: view.event_count,
+      online: m.online,
+      status: view.status,
+      status_label: view.status_label
     }
   })
 }
 
 export function saveSurgeSettings(rows) {
   rows.forEach((row) => {
-    const setting = state.surgeSettings.find((s) => s.channel_id === row.channel_id)
-    const ch = state.channels.find((c) => c.channel_id === row.channel_id)
-    if (!setting || !ch) return
-    setting.reset_mode = row.reset_mode
-    setting.alarm_threshold = Number(row.alarm_threshold)
-    setting.location = row.location
-    ch.reset_mode = row.reset_mode
-    ch.alarm_threshold = Number(row.alarm_threshold)
-    ch.location = row.location
-    if (row.reset_mode === 'Reset') ch.event_count = 0
+    const mod = state.modules.find((m) => m.module_id === row.module_id)
+    if (!mod) return
+    mod.reset_mode = row.reset_mode
+    mod.alarm_threshold = Number(row.alarm_threshold)
+    mod.location = row.location
+    if (row.reset_mode === 'Reset') {
+      state.channels
+        .filter((c) => c.module_id === mod.module_id)
+        .forEach((c) => (c.event_count = 0))
+    }
   })
-  pushLog('INFO', 'system', '浪涌通道设置已应用')
+  pushLog('INFO', 'system', '浪涌模块设置已应用')
   return getSurgeSettings()
 }
 
@@ -818,7 +913,7 @@ export function exportConfigText() {
       time: state.config.time,
       environment: state.config.environment,
       upload: { ...state.config.upload, secret: undefined },
-      surge_settings: state.surgeSettings
+      surge_settings: getSurgeSettings()
     },
     null,
     2

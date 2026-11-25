@@ -163,6 +163,7 @@ onBeforeUnmount(() => {
                 <th>模块</th>
                 <th>地址</th>
                 <th>状态</th>
+                <th style="min-width: 110px">剩余寿命</th>
                 <th>固件</th>
                 <th class="num">心跳</th>
                 <th class="num">I²C 错误</th>
@@ -178,6 +179,9 @@ onBeforeUnmount(() => {
                 <td><b class="mod-name">M{{ m.module_id }}</b></td>
                 <td class="mono">{{ m.address }}</td>
                 <td><StatusBadge :tone="m.online ? 'ok' : 'muted'" :label="m.online ? '在线' : '离线'" live /></td>
+                <td>
+                  <span class="mono" :class="{ alert: m.life_percent < m.alarm_threshold }">{{ m.life_percent }}%</span>
+                </td>
                 <td class="mono">{{ m.firmware }}</td>
                 <td class="num">{{ m.heartbeat_counter.toLocaleString() }}</td>
                 <td class="num" :class="{ alert: m.communication_error_count > 20 }">{{ m.communication_error_count }}</td>

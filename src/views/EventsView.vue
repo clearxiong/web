@@ -1,4 +1,6 @@
 <script setup>
+const slotNames = ['霍尔比较器', '光敏采集', '事件锁存', 'I2C 从机']
+
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
@@ -153,7 +155,9 @@ onMounted(() => {
           <label>通道</label>
           <select v-model="filters.channel_id" class="select" @change="onFilterChange">
             <option value="">全部通道</option>
-            <option v-for="i in 16" :key="i" :value="String(i)">CH{{ String(i).padStart(2, '0') }}</option>
+            <option v-for="i in 16" :key="i" :value="String(i)">
+              CH{{ String(i).padStart(2, '0') }} · {{ slotNames[(i - 1) % 4] }}
+            </option>
           </select>
         </div>
         <div class="field">

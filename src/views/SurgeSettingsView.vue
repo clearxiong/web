@@ -27,7 +27,7 @@ const statusTone = {
 function editableSnapshot(list) {
   return JSON.stringify(
     list.map((r) => ({
-      channel_id: r.channel_id,
+      module_id: r.module_id,
       reset_mode: r.reset_mode,
       alarm_threshold: Number(r.alarm_threshold),
       location: r.location
@@ -71,11 +71,11 @@ function validate() {
   rows.value.forEach((r) => {
     const t = Number(r.alarm_threshold)
     if (!Number.isFinite(t) || t < 0 || t > 100) {
-      next[r.channel_id] = '告警阈值需为 0–100 的数字'
+      next[r.module_id] = '告警阈值需为 0–100 的数字'
     } else if (!String(r.location).trim()) {
-      next[r.channel_id] = '安装位置不能为空'
+      next[r.module_id] = '安装位置不能为空'
     } else if (String(r.location).length > 128) {
-      next[r.channel_id] = '安装位置不能超过 128 字符'
+      next[r.module_id] = '安装位置不能超过 128 字符'
     }
   })
   errors.value = next
@@ -96,7 +96,7 @@ async function doSave() {
     rows.value = await api.saveSurgeSettings(rows.value)
     baseline.value = editableSnapshot(rows.value)
     confirmOpen.value = false
-    toast.success('浪涌通道设置已保存')
+    toast.success('浪涌模块设置已保存')
   } catch (err) {
     toast.error(err.message || '保存失败')
   } finally {
@@ -117,7 +117,7 @@ onMounted(load)
     <div class="page-head">
       <div>
         <h1 class="page-title">浪涌设置</h1>
-        <p class="page-sub">按通道配置重置计数方式、告警日志触发阈值与安装位置</p>
+        <p class="page-sub">按防雷模块配置重置计数方式、告警日志触发阈值与安装位置</p>
       </div>
       <div class="row">
         <button class="btn" :disabled="!dirty" @click="revert">撤销修改</button>
@@ -132,25 +132,25 @@ onMounted(load)
       <div class="sum-card">
         <span class="sum-label">平均剩余寿命</span>
         <b>{{ avgLife }}<small>%</small></b>
-        <p>16 路模块寿命参考值</p>
+        <p>4 个防雷模块的平均值</p>
       </div>
       <div class="sum-card">
         <span class="sum-label">低于告警阈值</span>
-        <b class="warn">{{ belowThreshold }}<small>路</small></b>
+        <b class="warn">{{ belowThreshold }}<small>个</small></b>
         <p>按当前告警触发百分比统计</p>
       </div>
       <div class="sum-card">
         <span class="sum-label">Reset 计数模式</span>
-        <b>{{ resetCount }}<small>路</small></b>
-        <p>保存后该通道计数归零</p>
+        <b>{{ resetCount }}<small>个</small></b>
+        <p>保存后该模块计数归零</p>
       </div>
     </div>
 
     <section class="card table-card">
       <div class="card-head">
         <div>
-          <h3 class="card-title">16 路浪涌通道参数</h3>
-          <p class="card-sub">对应手册「IP PoE 浪涌 → 浪涌设置」</p>
+          <h3 class="card-title">4 个防雷模块参数</h3>
+          <p class="card-sub">每个 STM32 模块管辖 4 路监测通道，寿命与浪涌计数在模块级</p>
         </div>
         <span class="dirty-flag" :class="{ on: dirty }">
           <i class="dot" :class="dirty ? 'warn' : 'ok'"></i>
@@ -162,10 +162,11 @@ onMounted(load)
         <table class="data">
           <thead>
             <tr>
-              <th>通道</th>
               <th>模块</th>
+              <th>I²C 地址</th>
+              <th>管辖通道</th>
               <th>状态</th>
-              <th style="min-width: 150px">模块寿命</th>
+              <th style="min-width: 150px">剩余寿命</th>
               <th class="num">浪涌计数</th>
               <th style="min-width: 160px">重置计数</th>
               <th style="min-width: 150px">告警日志触发</th>
@@ -173,9 +174,14 @@ onMounted(load)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in rows" :key="r.channel_id">
-              <td><b class="ch">{{ r.channel_name }}</b></td>
-              <td class="mono">M{{ Math.ceil(r.channel_id / 4) }}</td>
+            <tr v-for="r in rows" :key="r.module_id">
+              <td><b class="ch">M{{ r.module_id }}</b></td>
+              <td class="mono">{{ r.address }}</td>
+              <td class="mono">
+                CH{{ String((r.module_id - 1) * 4 + 1).padStart(2, '0') }}–CH{{
+                  String(r.module_id * 4).padStart(2, '0')
+                }}
+              </td>
               <td><StatusBadge :tone="statusTone[r.status] || 'muted'" :label="r.status_label" /></td>
               <td><LifeBar :percent="r.life_percent" :threshold="r.alarm_threshold" /></td>
               <td class="num strong">{{ r.event_count }}</td>
@@ -194,7 +200,7 @@ onMounted(load)
                     min="0"
                     max="100"
                     step="1"
-                    :class="{ invalid: errors[r.channel_id] }"
+                    :class="{ invalid: errors[r.module_id] }"
                   />
                   <span>%</span>
                 </div>
@@ -205,16 +211,16 @@ onMounted(load)
                   class="input sm-input wide"
                   type="text"
                   maxlength="128"
-                  :class="{ invalid: errors[r.channel_id] }"
+                  :class="{ invalid: errors[r.module_id] }"
                 />
-                <p v-if="errors[r.channel_id]" class="cell-error">{{ errors[r.channel_id] }}</p>
+                <p v-if="errors[r.module_id]" class="cell-error">{{ errors[r.module_id] }}</p>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="table-foot">
-        <span>告警日志触发：寿命消耗到设定百分比时写入告警日志并标记红色进度条。</span>
+        <span>告警日志触发：模块剩余寿命低于设定百分比时写入告警日志，并把进度条标记为红色。</span>
       </div>
     </section>
 
@@ -223,21 +229,21 @@ onMounted(load)
         <span class="ex-icon"><AppIcon name="gauge" :size="17" /></span>
         <div>
           <b>重置计数方式</b>
-          <p>Reset 将通道计数器归零；Accumulate 保持当前累计值。修改后点击「保存设置」生效。</p>
+          <p>Reset 将模块及其管辖通道的计数器归零；Accumulate 保持当前累计值。修改后点击「保存设置」生效。</p>
         </div>
       </div>
       <div class="explain-item">
         <span class="ex-icon"><AppIcon name="alert" :size="17" /></span>
         <div>
           <b>告警日志触发</b>
-          <p>取值 0–100%，超过该阈值时生成告警日志。阈值需结合保护器件试验数据确定。</p>
+          <p>取值 0–100%，模块剩余寿命低于该百分比时生成告警日志。阈值需结合保护器件试验数据确定。</p>
         </div>
       </div>
       <div class="explain-item">
         <span class="ex-icon"><AppIcon name="shield" :size="17" /></span>
         <div>
           <b>寿命口径</b>
-          <p>模块寿命依据浪涌计数与额定冲击次数估算，用于运维参考，不代表精确剩余寿命。</p>
+          <p>4 个防雷模块各自独立计数与估算，依据浪涌计数与额定冲击次数得出，仅用于运维参考，不代表精确剩余寿命。</p>
         </div>
       </div>
     </section>
@@ -245,8 +251,8 @@ onMounted(load)
     <ConfirmDialog
       :open="confirmOpen"
       title="保存浪涌设置？"
-      message="将把 16 路通道的重置方式、告警阈值与安装位置写入设备。"
-      :detail="resetCount > 0 ? `其中 ${resetCount} 路通道为 Reset 模式，保存后其浪涌计数将归零。` : ''"
+      message="将把 4 个防雷模块的重置方式、告警阈值与安装位置写入设备。"
+      :detail="resetCount > 0 ? `其中 ${resetCount} 个模块为 Reset 模式，保存后其浪涌计数将归零。` : ''"
       confirm-text="保存设置"
       tone="primary"
       :busy="saving"

@@ -31,17 +31,18 @@ const temp = computed(() => {
 })
 
 const health = computed(() => {
+  const mods = modules.value
   const list = channels.value
   return {
-    good: list.filter((c) => c.life_percent >= 90).length,
-    attention: list.filter((c) => c.life_percent < 90 && c.life_percent >= 80).length,
-    warning: list.filter((c) => c.life_percent < 80).length,
+    good: mods.filter((m) => m.life_percent >= 90).length,
+    attention: mods.filter((m) => m.life_percent < 90 && m.life_percent >= 80).length,
+    warning: mods.filter((m) => m.life_percent < 80).length,
     fail: list.filter((c) => ['FAIL', 'OFFLINE'].includes(c.status)).length,
     unknown: list.filter((c) => c.status === 'UNKNOWN').length
   }
 })
 
-const healthTotal = computed(() => Math.max(1, channels.value.length))
+const healthTotal = computed(() => Math.max(1, modules.value.length))
 
 const canRefresh = computed(() => !refreshing.value && !state.loading)
 
@@ -112,7 +113,7 @@ onMounted(async () => {
           unit="次"
           icon="bolt"
           accent="var(--brand)"
-          foot="16 路历史累计计数"
+          foot="4 个模块霍尔通道合计"
         />
         <StatCard
           label="在线模块"
@@ -127,7 +128,7 @@ onMounted(async () => {
           unit="路"
           icon="shield"
           accent="#0f9d8f"
-          foot="4 模块 × 4 通道"
+          foot="4 模块 × 4 接口通道"
         />
         <StatCard
           label="当前异常"
@@ -136,7 +137,7 @@ onMounted(async () => {
           :tone="(device?.fault_count ?? 0) > 0 ? 'warn' : 'ok'"
           icon="alert"
           :accent="(device?.fault_count ?? 0) > 0 ? 'var(--warn)' : 'var(--ok)'"
-          :foot="`状态异常 ${health.fail} 路 · 未知 ${health.unknown} 路`"
+          :foot="`异常接口 ${health.fail} 个 · 未知 ${health.unknown} 个`"
         />
       </div>
 
@@ -193,6 +194,9 @@ onMounted(async () => {
                 <div class="mod-meta">
                   <span>心跳 {{ m.heartbeat_counter.toLocaleString() }}</span>
                   <span>{{ timeAgo(m.last_communication_time) }}</span>
+                  <span class="mod-life" :class="m.life_percent < m.alarm_threshold ? 'danger' : ''">
+                    剩余寿命 {{ m.life_percent }}%
+                  </span>
                 </div>
                 <div class="queue">
                   <span class="queue-label">事件队列 {{ m.queue_used }}/{{ m.queue_capacity }}</span>
@@ -208,12 +212,12 @@ onMounted(async () => {
       </div>
 
       <div class="section-head">
-        <h2 class="section-title">16 路通道状态</h2>
+        <h2 class="section-title">16 个模块接口通道</h2>
         <div class="legend">
-          <span><i class="dot ok"></i>正常</span>
-          <span><i class="dot warn"></i>事件触发</span>
-          <span><i class="dot danger"></i>状态异常</span>
-          <span><i class="dot"></i>监测失效</span>
+          <span><i class="dot ok"></i>正常 / 未触发 / 空闲</span>
+          <span><i class="dot warn"></i>已触发 / 待读取</span>
+          <span><i class="dot danger"></i>接口异常</span>
+          <span><i class="dot"></i>模块离线</span>
           <span><i class="dot info"></i>未知</span>
         </div>
       </div>
@@ -275,19 +279,19 @@ onMounted(async () => {
             <ul class="risk-list">
               <li v-if="health.warning">
                 <i class="dot danger"></i>
-                {{ health.warning }} 路通道寿命低于告警阈值，建议安排模块更换计划。
+                {{ health.warning }} 个模块剩余寿命低于告警阈值，建议安排模块更换计划。
               </li>
               <li v-if="health.fail">
                 <i class="dot danger"></i>
-                {{ health.fail }} 路通道监测信号异常，请检查光敏检测回路。
+                {{ health.fail }} 个接口通道异常，请检查光敏检测回路或 I²C 通信。
               </li>
               <li v-if="health.unknown">
                 <i class="dot info"></i>
-                {{ health.unknown }} 路通道状态暂不可确认，等待下一次采集。
+                {{ health.unknown }} 个接口通道状态暂不可确认，等待下一次采集。
               </li>
               <li v-if="!health.warning && !health.fail && !health.unknown">
                 <i class="dot ok"></i>
-                全部通道状态正常，寿命余量充足。
+                全部通道状态正常，模块寿命余量充足。
               </li>
             </ul>
             <button class="btn sm ghost view-all" @click="router.push({ name: 'channels' })">
@@ -417,6 +421,15 @@ onMounted(async () => {
   font-size: 11px;
   color: var(--ink-3);
   margin: 2px 0 6px;
+}
+.mod-life {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.mod-life.danger {
+  color: var(--danger);
+  font-weight: 600;
 }
 .queue {
   display: flex;

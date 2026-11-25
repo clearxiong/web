@@ -74,12 +74,12 @@ function goEvents() {
           <header class="drawer-head">
             <div v-if="detail" class="head-main">
               <div class="head-id">
-                <h3>{{ detail.channel.name }}</h3>
+                <h3>{{ detail.channel.name }} · {{ detail.channel.kind_name }}</h3>
                 <span class="head-mod">模块 {{ detail.channel.module_id }} · {{ detail.channel.module_address }}</span>
               </div>
               <StatusBadge
                 :tone="toneMap[detail.channel.status] || 'muted'"
-                :label="detail.channel.status_label"
+                :label="detail.channel.state_label"
               />
             </div>
             <div v-else class="head-main"><h3>通道详情</h3></div>
@@ -90,43 +90,48 @@ function goEvents() {
 
           <div v-if="loading" class="drawer-loading">正在读取通道数据…</div>
 
-          <div v-else-if="detail" class="drawer-body">
+          <div v-else-if="detail && detail.module" class="drawer-body">
             <section class="life-card">
               <div class="life-top">
                 <div>
-                  <p class="mini-label">模块剩余寿命</p>
-                  <div class="life-big" :class="detail.channel.health">{{ detail.channel.life_percent }}<small>%</small></div>
+                  <p class="mini-label">所属模块 M{{ detail.module.module_id }} · 剩余寿命</p>
+                  <div
+                    class="life-big"
+                    :class="detail.module.life_percent < detail.module.alarm_threshold ? 'warning' : 'good'"
+                  >
+                    {{ detail.module.life_percent }}<small>%</small>
+                  </div>
                 </div>
                 <div class="life-side">
-                  <p class="mini-label">告警日志触发阈值</p>
-                  <b>{{ detail.channel.alarm_threshold }}%</b>
-                  <p class="mini-label" style="margin-top: 6px">累计浪涌计数</p>
+                  <p class="mini-label">模块告警阈值</p>
+                  <b>{{ detail.module.alarm_threshold }}%</b>
+                  <p class="mini-label" style="margin-top: 6px">本接口事件次数</p>
                   <b>{{ detail.channel.event_count }}</b>
                 </div>
               </div>
-              <LifeBar :percent="detail.channel.life_percent" :threshold="detail.channel.alarm_threshold" />
+              <LifeBar :percent="detail.module.life_percent" :threshold="detail.module.alarm_threshold" />
               <p class="life-note">{{ detail.channel.health_text }}</p>
             </section>
 
             <section class="info-grid">
               <div class="info-item">
-                <span>霍尔比较器</span>
+                <span>接口类型</span>
+                <b>{{ detail.channel.kind_name }}</b>
+              </div>
+              <div class="info-item">
+                <span>接口状态</span>
                 <b>
-                  <i class="dot" :class="detail.channel.hall_state ? 'warn' : 'ok'"></i>
-                  {{ detail.channel.hall_label }}
+                  <i class="dot" :class="toneMap[detail.channel.status]"></i>
+                  {{ detail.channel.state_label }}
                 </b>
               </div>
               <div class="info-item">
-                <span>光敏状态</span>
-                <b><i class="dot" :class="detail.channel.optical_tone"></i>{{ detail.channel.optical_label }}</b>
+                <span>事件次数</span>
+                <b class="mono">{{ detail.channel.event_count }}</b>
               </div>
               <div class="info-item">
-                <span>通信状态</span>
-                <b>{{ detail.channel.communication_state === 'ONLINE' ? '在线' : '离线' }}</b>
-              </div>
-              <div class="info-item">
-                <span>重置计数模式</span>
-                <b>{{ detail.channel.reset_mode === 'Reset' ? 'Reset（归零）' : 'Accumulate（累积）' }}</b>
+                <span>所属模块</span>
+                <b class="mono">M{{ detail.module.module_id }} · {{ detail.module.address }}</b>
               </div>
               <div class="info-item">
                 <span>最近事件</span>
@@ -137,8 +142,12 @@ function goEvents() {
                 <b class="mono">{{ detail.channel.fault_code ? '0x' + detail.channel.fault_code.toString(16).padStart(4, '0') : '—' }}</b>
               </div>
               <div class="info-item span-2">
-                <span>安装位置</span>
-                <b>{{ detail.channel.location }}</b>
+                <span>模块安装位置</span>
+                <b>{{ detail.module.location }}</b>
+              </div>
+              <div class="info-item span-2">
+                <span>接口说明</span>
+                <b class="kind-desc">{{ detail.channel.kind_desc }}</b>
               </div>
             </section>
 
@@ -187,6 +196,11 @@ function goEvents() {
 </template>
 
 <style scoped>
+.kind-desc {
+  font-weight: 500;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
 .drawer-overlay {
   position: fixed;
   inset: 0;

@@ -73,12 +73,12 @@ onMounted(load)
     <template v-else>
       <div class="grid cols-4">
         <StatCard
-          label="累计事件"
+          label="累计浪涌事件"
           :value="stats.total_event_count"
           unit="次"
           icon="bolt"
           accent="var(--brand)"
-          foot="16 路历史累计"
+          foot="4 个模块霍尔通道合计"
         />
         <StatCard
           label="今日事件"
@@ -143,8 +143,8 @@ onMounted(load)
       <section class="card full-row">
         <div class="card-head">
           <div>
-            <h3 class="card-title">16 路通道事件次数</h3>
-            <p class="card-sub">各通道累计浪涌计数，柱高为事件次数</p>
+            <h3 class="card-title">16 个接口通道事件次数</h3>
+            <p class="card-sub">16 个接口通道的事件次数（霍尔 / 光敏 / 锁存 / I²C）</p>
           </div>
           <span class="muted" style="font-size: 12px">单位：次</span>
         </div>
@@ -237,24 +237,24 @@ onMounted(load)
         <div class="card-head">
           <div>
             <h3 class="card-title">健康风险分布</h3>
-            <p class="card-sub">基于模块寿命余量的风险分层</p>
+            <p class="card-sub">按 4 个防雷模块的剩余寿命分层</p>
           </div>
           <AppIcon name="gauge" :size="18" style="color: var(--ink-3)" />
         </div>
         <div class="card-body health-body">
           <div class="health-col">
             <div class="hcol-top"><b class="ok">{{ stats.health_summary.good }}</b><span>寿命充足</span></div>
-            <div class="progress ok"><span :style="{ width: (stats.health_summary.good / 16) * 100 + '%' }"></span></div>
+            <div class="progress ok"><span :style="{ width: (stats.health_summary.good / 4) * 100 + '%' }"></span></div>
             <p>剩余寿命 ≥ 90%，按例行计划巡检即可。</p>
           </div>
           <div class="health-col">
             <div class="hcol-top"><b class="warn">{{ stats.health_summary.attention }}</b><span>建议巡检</span></div>
-            <div class="progress warn"><span :style="{ width: (stats.health_summary.attention / 16) * 100 + '%' }"></span></div>
+            <div class="progress warn"><span :style="{ width: (stats.health_summary.attention / 4) * 100 + '%' }"></span></div>
             <p>剩余寿命 80%–90%，建议纳入近期巡检范围。</p>
           </div>
           <div class="health-col">
             <div class="hcol-top"><b class="danger">{{ stats.health_summary.warning }}</b><span>接近阈值</span></div>
-            <div class="progress danger"><span :style="{ width: (stats.health_summary.warning / 16) * 100 + '%' }"></span></div>
+            <div class="progress danger"><span :style="{ width: (stats.health_summary.warning / 4) * 100 + '%' }"></span></div>
             <p>剩余寿命低于告警阈值，建议安排模块更换。</p>
           </div>
         </div>

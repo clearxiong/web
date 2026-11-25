@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue'
-import LifeBar from './LifeBar.vue'
 import StatusBadge from './StatusBadge.vue'
 import { timeAgo } from '../utils/format'
 
@@ -31,18 +30,15 @@ const recentText = computed(() =>
         <span>{{ channel.name }}</span>
         <em>{{ moduleLabel }}</em>
       </div>
-      <StatusBadge :tone="tone" :label="channel.status_label" :live="channel.status === 'ALARM'" />
+      <StatusBadge :tone="tone" :label="channel.state_label" :live="channel.status === 'ALARM'" />
     </div>
 
-    <div class="ch-life">
-      <span class="ch-life-label">模块寿命</span>
-      <LifeBar :percent="channel.life_percent" :threshold="channel.alarm_threshold" thin />
-    </div>
+    <p class="ch-kind">{{ channel.kind_name }}</p>
 
     <div class="ch-metrics">
       <div>
         <b>{{ channel.event_count }}</b>
-        <span>浪涌计数</span>
+        <span>事件次数</span>
       </div>
       <div>
         <b class="recent">{{ recentText }}</b>
@@ -50,15 +46,10 @@ const recentText = computed(() =>
       </div>
     </div>
 
-    <div class="ch-foot">
-      <span class="sig">
-        <i class="dot" :class="channel.hall_state ? 'warn' : 'ok'"></i>
-        霍尔 {{ channel.hall_label }}
-      </span>
-      <span class="sig">
-        <i class="dot" :class="channel.optical_tone"></i>
-        光敏 {{ channel.optical_label }}
-      </span>
+    <div class="ch-module">
+      <span>所属模块</span>
+      <b>{{ moduleLabel }}</b>
+      <em>剩余寿命 {{ channel.module_life_percent }}%</em>
     </div>
   </button>
 </template>
@@ -134,16 +125,32 @@ const recentText = computed(() =>
   padding: 1px 5px;
   letter-spacing: 0.4px;
 }
-.ch-life {
-  margin-top: 10px;
-}
-.ch-life-label {
-  font-size: 10px;
+.ch-kind {
+  margin-top: 6px;
+  font-size: 11.5px;
   font-weight: 600;
+  color: var(--ink-2);
+}
+.ch-module {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  font-size: 10.5px;
   color: var(--ink-3);
-  letter-spacing: 0.5px;
-  display: block;
-  margin-bottom: 3px;
+}
+.ch-module b {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+  background: var(--surface-3);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.ch-module em {
+  font-style: normal;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
 }
 .ch-metrics {
   display: grid;
