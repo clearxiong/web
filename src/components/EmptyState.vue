@@ -29,7 +29,7 @@ defineProps({
 .empty-icon {
   width: 54px;
   height: 54px;
-  border-radius: 16px;
+  border-radius: 4px;
   background: var(--surface-3);
   color: var(--ink-3);
   display: grid;

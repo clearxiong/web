@@ -1,0 +1,464 @@
+/* ============================================================
+   Procet 主题：Element UI 后台风格（参考 led_web/newSwitch）
+   仅作用于 .procet / .procet-login，不影响 AETEK 演示
+   ============================================================ */
+
+.procet,
+.procet-login,
+.procet-body {
+  /* Surfaces */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #fafafa;
+  --surface-3: #f5f7fa;
+  --line: #ebeef5;
+  --line-strong: #dcdfe6;
+
+  /* Ink */
+  --ink: #262626;
+  --ink-2: #515a6e;
+  --ink-3: #8c8c8c;
+
+  /* Brand */
+  --brand: #409eff;
+  --brand-strong: #66b1ff;
+  --brand-soft: #ecf5ff;
+  --brand-line: #b3d8ff;
+
+  /* Sidebar */
+  --sidebar: #304156;
+  --sidebar-2: #1f2d3d;
+  --sidebar-3: #001528;
+  --sidebar-ink: #bfcbd9;
+  --sidebar-ink-dim: #8494a7;
+
+  /* Status */
+  --ok: #67c23a;
+  --ok-soft: #f0f9eb;
+  --ok-line: #e1f3d8;
+  --warn: #e6a23c;
+  --warn-soft: #fdf6ec;
+  --warn-line: #faecd8;
+  --danger: #f56c6c;
+  --danger-soft: #fef0f0;
+  --danger-line: #fde2e2;
+  --info: #409eff;
+  --info-soft: #ecf5ff;
+  --info-line: #d9ecff;
+  --muted: #909399;
+  --muted-soft: #f4f4f5;
+  --muted-line: #e9e9eb;
+
+  /* Radius */
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-lg: 4px;
+  --r-pill: 4px;
+
+  /* Shadow */
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  /* Layout */
+  --sidebar-w: 242px;
+  --topbar-h: 50px;
+}
+
+/* ---------- 页面容器 ---------- */
+.procet .page {
+  max-width: none;
+  padding: 20px;
+}
+
+.procet .page-head {
+  align-items: center;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #ddd;
+}
+
+.procet .page-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.procet .page-sub {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* ---------- 卡片（el-card） ---------- */
+.procet .card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.procet .card-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.procet .card-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.procet .card-title::before {
+  display: none;
+}
+
+.procet .card-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.procet .card-body {
+  padding: 20px;
+}
+
+/* ---------- 区块标题 ---------- */
+.procet .section-head {
+  margin: 20px 0 12px;
+}
+
+.procet .section-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.procet .section-title::before {
+  display: none;
+}
+
+/* ---------- KPI ---------- */
+.procet .kpi {
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 20px 16px;
+}
+
+.procet .kpi::after {
+  display: none;
+}
+
+.procet .kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-3);
+}
+
+.procet .kpi-value {
+  margin-top: 10px;
+  font-size: 28px;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.procet .kpi .kpi-icon {
+  color: var(--kpi-accent, var(--brand));
+  opacity: 1;
+}
+
+/* ---------- 按钮（el-button） ---------- */
+.procet .btn {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.procet .btn:hover {
+  background: var(--brand-soft);
+  border-color: #c6e2ff;
+  color: var(--brand);
+}
+
+.procet .btn:active {
+  transform: none;
+}
+
+.procet .btn.primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: none;
+}
+
+.procet .btn.primary:hover {
+  background: var(--brand-strong);
+  border-color: var(--brand-strong);
+  color: #fff;
+}
+
+.procet .btn.danger {
+  background: #fef0f0;
+  color: var(--danger);
+  border-color: var(--danger-line);
+}
+
+.procet .btn.danger:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.procet .btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--brand);
+  padding: 0 6px;
+}
+
+.procet .btn.ghost:hover {
+  background: transparent;
+  color: var(--brand-strong);
+}
+
+.procet .btn.sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.procet .btn:disabled {
+  opacity: 0.5;
+}
+
+/* ---------- 标签（el-tag） ---------- */
+.procet .badge {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+/* ---------- 表单 ---------- */
+.procet .field > label,
+.procet .field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  letter-spacing: 0;
+}
+
+.procet .input,
+.procet .select,
+.procet .textarea {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.procet .textarea {
+  height: auto;
+  padding: 8px 12px;
+}
+
+.procet .input:hover,
+.procet .select:hover,
+.procet .textarea:hover {
+  border-color: #c0c4cc;
+}
+
+.procet .input:focus,
+.procet .select:focus,
+.procet .textarea:focus {
+  border-color: var(--brand);
+  box-shadow: none;
+}
+
+.procet .input:disabled,
+.procet .select:disabled {
+  background: var(--surface-3);
+  border-color: var(--line);
+  color: var(--ink-3);
+}
+
+.procet .hint {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* ---------- 开关 ---------- */
+.procet .switch {
+  width: 40px;
+  height: 20px;
+}
+
+.procet .switch::after {
+  width: 16px;
+  height: 16px;
+}
+
+.procet .switch.on::after {
+  transform: translateX(20px);
+}
+
+/* ---------- 表格（el-table） ---------- */
+.procet table.data {
+  font-size: 14px;
+  min-width: 640px;
+}
+
+.procet table.data th {
+  padding: 12px 14px;
+  background: var(--surface-3);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-3);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.procet table.data td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+}
+
+.procet table.data tbody tr:nth-child(even) {
+  background: var(--surface-2);
+}
+
+.procet table.data tbody tr:hover {
+  background: var(--surface-3);
+}
+
+.procet table.data tbody tr:last-child td {
+  border-bottom: 1px solid var(--line);
+}
+
+.procet table.data td.strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- 表格操作列 ---------- */
+.procet table.data th.col-op,
+.procet table.data td.col-op {
+  text-align: right;
+  width: 80px;
+  white-space: nowrap;
+}
+
+.procet .link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--brand);
+  font-size: inherit;
+  cursor: pointer;
+}
+.procet .link-btn:hover {
+  color: var(--brand-strong);
+  text-decoration: underline;
+}
+
+/* ---------- 进度条 ---------- */
+.procet .progress {
+  height: 6px;
+  border-radius: 100px;
+  background: var(--line);
+}
+
+.procet .progress > span {
+  border-radius: 100px;
+}
+
+/* ---------- 筛选条 / 工具条 ---------- */
+.procet .toolbar {
+  gap: 12px;
+}
+
+.procet .chip {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.procet .chip:hover {
+  border-color: #c6e2ff;
+  color: var(--brand);
+}
+
+.procet .chip.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* ---------- 其他 ---------- */
+.procet .divider {
+  background: var(--line);
+}
+
+.procet .empty {
+  color: var(--ink-3);
+}
+
+.procet .link,
+.procet a {
+  color: var(--brand);
+}
+
+/* ---------- 登录页 ---------- */
+.procet-login {
+  color: #fff;
+}
+
+/* ---------- 弹层（Teleport 到 body，AETEK 不使用 procet-body） ---------- */
+.procet-body .modal-overlay .modal-card {
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+.procet-body .modal-card .modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.procet-body .modal-card .modal-close {
+  border-radius: 4px;
+}
+.procet-body .modal-card .confirm-icon {
+  border-radius: 4px;
+}
+.procet-body .modal-card .confirm-detail {
+  border-radius: 4px;
+}
+.procet-body .toast-stack .toast-item {
+  border-radius: 4px;
+  border-left-width: 1px;
+  border-left-color: var(--line);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}

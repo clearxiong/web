@@ -180,7 +180,7 @@ onBeforeUnmount(() => {
                 <td class="mono">{{ m.address }}</td>
                 <td><StatusBadge :tone="m.online ? 'ok' : 'muted'" :label="m.online ? '在线' : '离线'" live /></td>
                 <td>
-                  <span class="mono" :class="{ alert: m.life_percent < m.alarm_threshold }">{{ m.life_percent }}%</span>
+                  <span class="mono" :class="{ alert: m.life_percent < m.alarm_threshold }">{{ Math.round(m.life_percent) }}%</span>
                 </td>
                 <td class="mono">{{ m.firmware }}</td>
                 <td class="num">{{ m.heartbeat_counter.toLocaleString() }}</td>
@@ -344,7 +344,7 @@ onBeforeUnmount(() => {
   margin-top: 16px;
 }
 .mod-name {
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
 }
 td.num {
@@ -404,7 +404,7 @@ td.num {
   padding: 10px 12px;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 4px;
   font-size: 11.5px;
   color: var(--ink-3);
   line-height: 1.6;

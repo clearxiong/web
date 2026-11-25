@@ -65,11 +65,13 @@ npm run preview
 ### 路由与布局
 
 - `src/router/index.js`：hash 模式；`/aetek/*` 分支带 `meta.product='aetek'`，守卫按产品分别校验登录态；`afterEach` 按产品切换 `document.title`
-- `src/layouts/AppShell.vue`（Procet：固定顶栏 + 深色侧栏 + 300s 自动登出）与 `AetekShell.vue`（AETEK：左菜单两组 + 全局保存/自动登出）互不复用，各自维护移动端抽屉
+- `src/layouts/AppShell.vue`（Procet：白色顶栏 + 深色两级菜单侧栏 + 300s 自动登出）与 `AetekShell.vue`（AETEK：左菜单两组 + 全局保存/自动登出）互不复用，各自维护移动端抽屉
+- Procet 导航为「一级分组 → 二级页面」：一级菜单在 `AppShell.vue` 的 `navGroups` 中声明，新增页面时同时补 `meta.title` 与 `navGroups` 条目
 
 ### 样式与组件
 
 - `src/assets/styles/tokens.css` 定义全部颜色/圆角/间距变量，`base.css` 提供 `.page .card .btn .badge .table.data .progress .field` 等通用类；新页面优先复用这些类，不要自带一套
+- `src/assets/styles/procet-theme.css` 是 Procet 专属的 Element 风格皮肤（#409eff 主色、白顶栏、#304156 两级菜单、el-card 外观），只在 `.procet` / `.procet-login` / `.procet-body` 作用域内生效；AETEK 不受影响。调整 Procet 视觉优先改这个文件，不要动 `tokens.css` 的全局值
 - 图表是手写 SVG（`components/charts/`），不引第三方库，保证离线与包体
 - 组件 props 约定：`StatusBadge` 取 `tone` + `label`，`LifeBar` 取 `percent` + `threshold`（剩余寿命口径，低于阈值变红）
 

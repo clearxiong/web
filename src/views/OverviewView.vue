@@ -195,7 +195,7 @@ onMounted(async () => {
                   <span>心跳 {{ m.heartbeat_counter.toLocaleString() }}</span>
                   <span>{{ timeAgo(m.last_communication_time) }}</span>
                   <span class="mod-life" :class="m.life_percent < m.alarm_threshold ? 'danger' : ''">
-                    剩余寿命 {{ m.life_percent }}%
+                    剩余寿命 {{ Math.round(m.life_percent) }}%
                   </span>
                 </div>
                 <div class="queue">
@@ -389,12 +389,12 @@ onMounted(async () => {
 .mod-id {
   width: 36px;
   height: 36px;
-  border-radius: 9px;
+  border-radius: 4px;
   display: grid;
   place-items: center;
   background: var(--surface-3);
   color: var(--ink-2);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 12.5px;
   flex: none;
 }
@@ -481,7 +481,7 @@ onMounted(async () => {
 .health-bar {
   display: flex;
   height: 10px;
-  border-radius: 999px;
+  border-radius: 100px;
   overflow: hidden;
   background: var(--surface-3);
   gap: 2px;
@@ -509,7 +509,7 @@ onMounted(async () => {
 .health-stats div {
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;

@@ -52,13 +52,13 @@ const tone = computed(() => {
   transition: width 0.5s ease;
 }
 .life-fill.ok {
-  background: linear-gradient(90deg, #34a463, var(--ok));
+  background: var(--ok);
 }
 .life-fill.warn {
-  background: linear-gradient(90deg, #e9ab4a, var(--warn));
+  background: var(--warn);
 }
 .life-fill.danger {
-  background: linear-gradient(90deg, #e06464, var(--danger));
+  background: var(--danger);
 }
 .life-mark {
   position: absolute;

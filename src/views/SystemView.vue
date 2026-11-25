@@ -443,7 +443,7 @@ onMounted(load)
 .readonly-grid div {
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -465,27 +465,31 @@ onMounted(load)
 }
 .segmented.full {
   display: flex;
-  background: var(--surface-3);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 3px;
-  gap: 3px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
 }
 .segmented.full button {
   flex: 1;
-  height: 32px;
+  height: 36px;
   border: none;
+  border-right: 1px solid var(--line-strong);
   background: transparent;
-  border-radius: 7px;
-  color: var(--ink-3);
-  font-size: 12.5px;
-  font-weight: 600;
+  border-radius: 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
 }
+.segmented.full button:last-child {
+  border-right: none;
+}
 .segmented.full button.active {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: var(--shadow-sm);
+  background: var(--brand);
+  color: #fff;
 }
 .dhcp-row {
   margin-bottom: 14px;
@@ -512,15 +516,15 @@ onMounted(load)
   gap: 12px;
   margin-top: 16px;
   padding: 14px;
-  border-radius: 11px;
-  background: linear-gradient(120deg, #fdf6ec, #fff);
+  border-radius: 4px;
+  background: var(--warn-soft);
   border: 1px solid var(--warn-line);
 }
 .env-icon {
   width: 40px;
   height: 40px;
-  border-radius: 11px;
-  background: var(--warn-soft);
+  border-radius: 4px;
+  background: #fbe7c6;
   color: var(--warn);
   display: grid;
   place-items: center;
@@ -536,7 +540,7 @@ onMounted(load)
 }
 .env-preview b {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }

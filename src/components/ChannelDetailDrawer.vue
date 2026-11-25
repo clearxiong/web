@@ -99,14 +99,14 @@ function goEvents() {
                     class="life-big"
                     :class="detail.module.life_percent < detail.module.alarm_threshold ? 'warning' : 'good'"
                   >
-                    {{ detail.module.life_percent }}<small>%</small>
+                    {{ Math.round(detail.module.life_percent) }}<small>%</small>
                   </div>
                 </div>
                 <div class="life-side">
                   <p class="mini-label">模块告警阈值</p>
                   <b>{{ detail.module.alarm_threshold }}%</b>
                   <p class="mini-label" style="margin-top: 6px">本接口事件次数</p>
-                  <b>{{ detail.channel.event_count }}</b>
+                  <b>{{ detail.channel.event_count.toLocaleString() }}</b>
                 </div>
               </div>
               <LifeBar :percent="detail.module.life_percent" :threshold="detail.module.alarm_threshold" />
@@ -127,7 +127,7 @@ function goEvents() {
               </div>
               <div class="info-item">
                 <span>事件次数</span>
-                <b class="mono">{{ detail.channel.event_count }}</b>
+                <b class="mono">{{ detail.channel.event_count.toLocaleString() }}</b>
               </div>
               <div class="info-item">
                 <span>所属模块</span>
@@ -156,7 +156,7 @@ function goEvents() {
                 <h4>近 14 天事件趋势</h4>
                 <span class="muted">次</span>
               </div>
-              <LineChart :data="detail.daily" :height="140" unit="次" color="#d97706" />
+              <LineChart :data="detail.daily" :height="140" unit="次" color="#409eff" />
             </section>
 
             <section class="sub-card">
@@ -216,7 +216,7 @@ function goEvents() {
   background: var(--surface);
   display: flex;
   flex-direction: column;
-  box-shadow: -20px 0 60px rgba(8, 18, 33, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 .drawer-head {
   flex: none;
@@ -236,8 +236,7 @@ function goEvents() {
 }
 .head-id h3 {
   font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
+  font-weight: 700;
 }
 .head-mod {
   font-size: 11px;
@@ -246,7 +245,7 @@ function goEvents() {
 .close {
   width: 32px;
   height: 32px;
-  border-radius: 9px;
+  border-radius: 4px;
   border: none;
   background: var(--surface-3);
   color: var(--ink-3);
@@ -277,7 +276,7 @@ function goEvents() {
 .life-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: 4px;
   padding: 16px;
 }
 .life-top {
@@ -294,9 +293,8 @@ function goEvents() {
 }
 .life-big {
   font-size: 38px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.1;
-  letter-spacing: -1.5px;
   font-variant-numeric: tabular-nums;
 }
 .life-big small {
@@ -336,7 +334,7 @@ function goEvents() {
   gap: 1px;
   background: var(--line);
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: 4px;
   overflow: hidden;
 }
 .info-item {
@@ -365,7 +363,7 @@ function goEvents() {
 .sub-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: 4px;
   padding: 14px 16px;
 }
 .sub-head {

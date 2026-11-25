@@ -204,7 +204,7 @@ onMounted(() => {
               <th>霍尔</th>
               <th>光敏</th>
               <th>确认 / 上报</th>
-              <th></th>
+              <th class="col-op">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -227,7 +227,9 @@ onMounted(() => {
                   {{ ev.uploaded ? '已上报' : '待上报' }}
                 </span>
               </td>
-              <td class="arrow"><AppIcon name="chevron" :size="14" /></td>
+              <td class="col-op">
+                <button class="link-btn" @click.stop="openDetail(ev)">详情</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -320,10 +322,6 @@ onMounted(() => {
   margin-right: 10px;
   white-space: nowrap;
 }
-.arrow {
-  color: var(--ink-3);
-  width: 30px;
-}
 .table-card {
   overflow: hidden;
 }
@@ -338,8 +336,7 @@ onMounted(() => {
 }
 .detail-id {
   font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
+  font-weight: 700;
 }
 .detail-time {
   font-size: 12px;
@@ -376,7 +373,7 @@ onMounted(() => {
   padding: 11px 13px;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 4px;
   font-size: 11.5px;
   line-height: 1.7;
   color: var(--ink-3);

@@ -128,7 +128,7 @@ onMounted(refresh)
               <th class="num">事件次数</th>
               <th>最近事件</th>
               <th>接口状态</th>
-              <th></th>
+              <th class="col-op">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -143,13 +143,15 @@ onMounted(refresh)
               </td>
               <td>
                 <span class="mono" :class="{ 'life-low': ch.module_life_percent < 80 }">
-                  {{ ch.module_life_percent }}%
+                  {{ Math.round(ch.module_life_percent) }}%
                 </span>
               </td>
-              <td class="num strong">{{ ch.event_count }}</td>
+              <td class="num strong">{{ ch.event_count.toLocaleString() }}</td>
               <td class="nowrap">{{ ch.last_event_time ? timeAgo(ch.last_event_time) : '—' }}</td>
               <td><StatusBadge :tone="toneMap[ch.status]" :label="ch.state_label" /></td>
-              <td class="arrow"><AppIcon name="chevron" :size="14" /></td>
+              <td class="col-op">
+                <button class="link-btn" @click.stop="openChannel(ch)">详情</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -215,8 +217,8 @@ onMounted(refresh)
 .chip em {
   font-style: normal;
   font-size: 10.5px;
-  background: rgba(15, 27, 45, 0.07);
-  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
   padding: 1px 6px;
   font-variant-numeric: tabular-nums;
 }
@@ -251,19 +253,19 @@ onMounted(refresh)
   display: inline-flex;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 3px;
+  border-radius: 4px;
+  padding: 2px;
   gap: 2px;
 }
 .segmented button {
-  height: 30px;
+  height: 28px;
   padding: 0 11px;
   border: none;
   background: transparent;
-  border-radius: 7px;
+  border-radius: 3px;
   color: var(--ink-3);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -282,20 +284,16 @@ onMounted(refresh)
   font-variant-numeric: tabular-nums;
 }
 .ch-name {
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
-  font-size: 13.5px;
-  letter-spacing: 0.2px;
+  font-size: 13px;
+  letter-spacing: 0;
 }
 .loc {
   max-width: 150px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.arrow {
-  color: var(--ink-3);
-  width: 30px;
 }
 .table-foot {
   padding: 11px 16px;

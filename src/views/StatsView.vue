@@ -291,7 +291,7 @@ onMounted(load)
   font-size: 11px;
   color: var(--ink-3);
   background: var(--surface-3);
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 4px 10px;
 }
 .donut-body {
@@ -337,7 +337,7 @@ onMounted(load)
 .ab-icon {
   width: 32px;
   height: 32px;
-  border-radius: 9px;
+  border-radius: 4px;
   display: grid;
   place-items: center;
   flex: none;
@@ -371,7 +371,7 @@ onMounted(load)
   font-size: 10px;
   color: var(--ink-3);
   background: var(--surface-3);
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 2px 7px;
 }
 .abnormal-note {
@@ -391,7 +391,7 @@ onMounted(load)
 }
 .health-col {
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: 4px;
   padding: 13px 14px;
   background: var(--surface-2);
 }

@@ -37,7 +37,7 @@ const recentText = computed(() =>
 
     <div class="ch-metrics">
       <div>
-        <b>{{ channel.event_count }}</b>
+        <b>{{ channel.event_count.toLocaleString() }}</b>
         <span>事件次数</span>
       </div>
       <div>
@@ -49,7 +49,7 @@ const recentText = computed(() =>
     <div class="ch-module">
       <span>所属模块</span>
       <b>{{ moduleLabel }}</b>
-      <em>剩余寿命 {{ channel.module_life_percent }}%</em>
+      <em>剩余寿命 {{ Math.round(channel.module_life_percent) }}%</em>
     </div>
   </button>
 </template>
@@ -60,42 +60,17 @@ const recentText = computed(() =>
   text-align: left;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border-radius: 4px;
   padding: 14px 15px 12px;
   cursor: pointer;
-  transition: border-color 0.16s, box-shadow 0.16s, transform 0.16s;
+  transition: border-color 0.16s, box-shadow 0.16s;
   font: inherit;
   color: inherit;
   overflow: hidden;
 }
-.ch-card::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--line-strong);
-}
-.ch-card.ok::after {
-  background: var(--ok);
-}
-.ch-card.warn::after {
-  background: var(--warn);
-}
-.ch-card.danger::after {
-  background: var(--danger);
-}
-.ch-card.info::after {
-  background: var(--info);
-}
-.ch-card.muted::after {
-  background: var(--muted);
-}
 .ch-card:hover {
-  border-color: var(--brand-line);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  border-color: #c6e2ff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 .ch-card.alarm {
   border-color: var(--warn-line);
@@ -112,8 +87,7 @@ const recentText = computed(() =>
   align-items: baseline;
   gap: 7px;
   font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
+  font-weight: 700;
 }
 .ch-id em {
   font-style: normal;

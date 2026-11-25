@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
-import StatusBadge from '../components/StatusBadge.vue'
 import { useAuth } from '../stores/auth'
 import { useDeviceStore } from '../stores/device'
 import { useToast } from '../stores/toast'
@@ -18,7 +17,8 @@ const toast = useToast()
 
 const navGroups = [
   {
-    title: '监测',
+    title: '设备监测',
+    icon: 'dashboard',
     items: [
       { name: 'overview', to: '/', label: '设备总览', icon: 'dashboard' },
       { name: 'channels', to: '/channels', label: '通道状态', icon: 'channels' },
@@ -27,14 +27,16 @@ const navGroups = [
     ]
   },
   {
-    title: '配置',
+    title: '参数配置',
+    icon: 'settings',
     items: [
       { name: 'surge-settings', to: '/surge-settings', label: '浪涌设置', icon: 'shield' },
-      { name: 'system', to: '/system', label: '系统设置', icon: 'settings' }
+      { name: 'system', to: '/system', label: '系统设置', icon: 'system' }
     ]
   },
   {
-    title: '运维',
+    title: '诊断运维',
+    icon: 'maintenance',
     items: [
       { name: 'diagnostics', to: '/diagnostics', label: '通信诊断', icon: 'diagnostics' },
       { name: 'maintenance', to: '/maintenance', label: '维护', icon: 'maintenance' }
@@ -47,6 +49,13 @@ const now = ref(new Date())
 const idleSeconds = ref(300)
 const simulating = ref(false)
 const saving = ref(false)
+const userMenuOpen = ref(false)
+const userMenuRef = ref(null)
+
+const activeGroupTitle = computed(
+  () => navGroups.find((group) => group.items.some((item) => item.name === route.name))?.title || ''
+)
+const openGroup = ref(activeGroupTitle.value)
 
 let timer = null
 
@@ -64,18 +73,28 @@ function isActive(item) {
   return route.name === item.name
 }
 
+function toggleGroup(group) {
+  openGroup.value = openGroup.value === group.title ? '' : group.title
+}
+
 watch(
   () => route.fullPath,
   () => {
     drawerOpen.value = false
+    userMenuOpen.value = false
   }
 )
+
+watch(activeGroupTitle, (title) => {
+  if (title) openGroup.value = title
+})
 
 function resetIdle() {
   idleSeconds.value = authState.user?.auto_logout || 300
 }
 
 function doLogout(message) {
+  userMenuOpen.value = false
   stopPolling()
   logout()
   if (message) toast.info(message)
@@ -119,61 +138,79 @@ async function onSaveConfig() {
   }
 }
 
+function onDocumentClick(event) {
+  if (userMenuRef.value && !userMenuRef.value.contains(event.target)) {
+    userMenuOpen.value = false
+  }
+}
+
 onMounted(() => {
+  document.body.classList.add('procet-body')
   startPolling()
   resetIdle()
   timer = setInterval(tick, 1000)
   window.addEventListener('pointerdown', resetIdle)
   window.addEventListener('keydown', resetIdle)
   window.addEventListener('wheel', resetIdle, { passive: true })
+  document.addEventListener('click', onDocumentClick)
 })
 
 onBeforeUnmount(() => {
+  document.body.classList.remove('procet-body')
   stopPolling()
   if (timer) clearInterval(timer)
   window.removeEventListener('pointerdown', resetIdle)
   window.removeEventListener('keydown', resetIdle)
   window.removeEventListener('wheel', resetIdle)
+  document.removeEventListener('click', onDocumentClick)
 })
 </script>
 
 <template>
-  <div class="shell" :class="{ 'drawer-open': drawerOpen }">
+  <div class="shell procet" :class="{ 'drawer-open': drawerOpen }">
     <header class="topbar">
       <button class="hamburger" aria-label="打开菜单" @click="drawerOpen = true">
         <AppIcon name="menu" :size="20" />
       </button>
 
       <RouterLink to="/" class="logo-link" aria-label="Procet 首页">
-        <BrandLogo :size="30" :word-size="21" />
+        <BrandLogo :size="28" :word-size="19" />
       </RouterLink>
 
       <span class="topbar-divider"></span>
 
-      <div class="crumb">
-        <span class="crumb-root">{{ deviceName }}</span>
-        <AppIcon name="chevron" :size="11" class="crumb-sep" />
-        <b>{{ route.meta.title }}</b>
+      <div class="device-chip">
+        <span class="dot" :class="online ? 'ok' : 'muted'"></span>
+        <b>{{ deviceName }}</b>
+        <span class="device-state">{{ online ? '设备在线' : '连接中…' }}</span>
       </div>
 
       <div class="top-actions">
-        <StatusBadge :tone="online ? 'ok' : 'muted'" :live="online" :label="online ? '设备在线' : '连接中'" />
         <span class="top-clock mono">{{ clock }}</span>
-        <span class="idle-chip mono" title="自动登出倒计时">登出 {{ idleText }}</span>
-        <button class="btn sm" :disabled="simulating" @click="onSimulate">
+        <span class="idle-chip">自动登出 {{ idleText }}</span>
+        <button class="btn sm top-btn" :disabled="simulating" @click="onSimulate">
           <AppIcon name="bolt" :size="14" />
           <span class="hide-sm">{{ simulating ? '模拟中…' : '模拟事件' }}</span>
         </button>
-        <button class="btn sm ghost save-btn" :disabled="saving" @click="onSaveConfig">
+        <button class="btn sm top-btn" :disabled="saving" @click="onSaveConfig">
           <AppIcon name="save" :size="14" />
-          <span class="hide-md">{{ saving ? '保存中…' : '保存配置' }}</span>
+          <span class="hide-sm">{{ saving ? '保存中…' : '保存配置' }}</span>
         </button>
-        <div class="user">
-          <span class="user-avatar">{{ username.slice(0, 1).toUpperCase() }}</span>
-          <span class="user-name">{{ username }}</span>
-          <button class="logout" title="退出登录" @click="doLogout('已安全退出')">
-            <AppIcon name="logout" :size="16" />
+
+        <div ref="userMenuRef" class="user-menu">
+          <button class="user-trigger" @click="userMenuOpen = !userMenuOpen">
+            <span class="user-avatar">{{ username.slice(0, 1).toUpperCase() }}</span>
+            <span class="user-name">{{ username }}</span>
+            <AppIcon name="chevron" :size="11" class="user-caret" />
           </button>
+          <transition name="drop">
+            <div v-if="userMenuOpen" class="user-dropdown">
+              <button class="dropdown-item" @click="doLogout('已安全退出')">
+                <AppIcon name="logout" :size="15" />
+                退出登录
+              </button>
+            </div>
+          </transition>
         </div>
       </div>
     </header>
@@ -183,17 +220,30 @@ onBeforeUnmount(() => {
     <aside class="sidebar">
       <nav class="nav">
         <div v-for="group in navGroups" :key="group.title" class="nav-group">
-          <p class="nav-group-title">{{ group.title }}</p>
-          <RouterLink
-            v-for="item in group.items"
-            :key="item.name"
-            :to="item.to"
-            class="nav-item"
-            :class="{ active: isActive(item) }"
+          <button
+            class="nav-parent"
+            :class="{ open: openGroup === group.title, 'has-active': group.items.some(isActive) }"
+            @click="toggleGroup(group)"
           >
-            <AppIcon :name="item.icon" :size="17" />
-            <span>{{ item.label }}</span>
-          </RouterLink>
+            <AppIcon :name="group.icon" :size="17" class="nav-parent-icon" />
+            <span class="nav-parent-label">{{ group.title }}</span>
+            <AppIcon name="chevron" :size="12" class="nav-arrow" />
+          </button>
+
+          <transition name="submenu">
+            <div v-show="openGroup === group.title" class="nav-sub">
+              <RouterLink
+                v-for="item in group.items"
+                :key="item.name"
+                :to="item.to"
+                class="nav-item"
+                :class="{ active: isActive(item) }"
+              >
+                <AppIcon :name="item.icon" :size="15" class="nav-item-icon" />
+                <span>{{ item.label }}</span>
+              </RouterLink>
+            </div>
+          </transition>
         </div>
       </nav>
 
@@ -211,7 +261,7 @@ onBeforeUnmount(() => {
           <AppIcon name="shield" :size="13" />
           AETEK SD-504 演示
         </RouterLink>
-        <p class="foot-copy">Copyright © 2026 Procet<br />保留所有权利。</p>
+        <p class="foot-copy">Copyright © 2026 Procet</p>
       </div>
     </aside>
 
@@ -226,7 +276,8 @@ onBeforeUnmount(() => {
 <style scoped>
 .shell {
   min-height: 100vh;
-  background: var(--bg);
+  background: var(--surface);
+  font-size: 14px;
 }
 
 /* ---------- Topbar ---------- */
@@ -240,17 +291,17 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 0 22px;
+  padding: 0 20px;
   background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid #ddd;
 }
 
 .hamburger {
   display: none;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-md);
-  border: 1px solid var(--line);
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
   background: var(--surface);
   color: var(--ink-2);
   cursor: pointer;
@@ -261,38 +312,33 @@ onBeforeUnmount(() => {
 .logo-link {
   display: inline-flex;
   align-items: center;
-  text-decoration: none;
   flex: none;
 }
 
 .topbar-divider {
   width: 1px;
-  height: 22px;
-  background: var(--line);
+  height: 20px;
+  background: #e4e7ed;
   flex: none;
 }
 
-.crumb {
+.device-chip {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 12.5px;
-  color: var(--ink-3);
+  gap: 8px;
   min-width: 0;
+  font-size: 13px;
+  color: var(--ink-3);
 }
-.crumb-root {
+.device-chip b {
+  font-weight: 600;
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 220px;
 }
-.crumb-sep {
-  color: var(--line-strong);
-  flex: none;
-}
-.crumb b {
-  color: var(--ink);
-  font-weight: 600;
+.device-state {
   white-space: nowrap;
 }
 
@@ -300,68 +346,115 @@ onBeforeUnmount(() => {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .top-clock {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-2);
-  font-weight: 600;
-  letter-spacing: 0.3px;
   font-variant-numeric: tabular-nums;
 }
 
 .idle-chip {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-3);
   background: var(--surface-3);
-  border: 1px solid var(--line);
-  border-radius: var(--r-pill);
-  padding: 3px 9px;
-  font-weight: 600;
+  border-radius: 4px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
-.save-btn {
+.top-btn {
   color: var(--ink-2);
 }
 
-.user {
+/* ---------- User dropdown ---------- */
+.user-menu {
+  position: relative;
+  padding-left: 12px;
+  border-left: 1px solid #e4e7ed;
+}
+
+.user-trigger {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding-left: 10px;
-  border-left: 1px solid var(--line);
+  gap: 8px;
+  height: 34px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
 }
+.user-trigger:hover {
+  background: var(--surface-3);
+}
+
 .user-avatar {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--brand-soft);
   color: var(--brand);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   display: grid;
   place-items: center;
+  flex: none;
 }
-.user-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-2);
+
+.user-caret {
+  color: #c0c4cc;
+  transform: rotate(90deg);
+  transition: transform 0.2s;
 }
-.logout {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--r-md);
+.user-trigger:hover .user-caret {
+  transform: rotate(90deg);
+}
+
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 148px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  z-index: 200;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
   border: none;
+  border-radius: 4px;
   background: transparent;
-  color: var(--ink-3);
+  color: var(--ink-2);
+  font-size: 13px;
   cursor: pointer;
-  display: grid;
-  place-items: center;
 }
-.logout:hover {
-  background: var(--danger-soft);
-  color: var(--danger);
+.dropdown-item:hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.drop-enter-active,
+.drop-leave-active {
+  transition: opacity 0.15s, transform 0.15s;
+}
+.drop-enter-from,
+.drop-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 /* ---------- Sidebar ---------- */
@@ -372,71 +465,128 @@ onBeforeUnmount(() => {
   bottom: 0;
   width: var(--sidebar-w);
   background: var(--sidebar);
-  color: var(--sidebar-ink);
   display: flex;
   flex-direction: column;
   z-index: 120;
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  user-select: none;
 }
 
 .nav {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 12px 8px;
+  padding: 8px 0 16px;
 }
 
 .nav-group + .nav-group {
-  margin-top: 16px;
+  margin-top: 2px;
 }
 
-.nav-group-title {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.3px;
-  color: #6d8095;
-  text-transform: uppercase;
-  padding: 0 12px 7px;
+.nav-parent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 50px;
+  padding: 0 20px;
+  border: none;
+  background: transparent;
+  color: var(--sidebar-ink);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-parent:hover {
+  background: #263445;
+}
+.nav-parent.open {
+  color: #fff;
+}
+.nav-parent.has-active {
+  color: #fff;
+}
+
+.nav-parent-icon {
+  flex: none;
+  color: #8a9bb0;
+}
+.nav-parent.open .nav-parent-icon,
+.nav-parent.has-active .nav-parent-icon {
+  color: var(--brand);
+}
+
+.nav-parent-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-arrow {
+  flex: none;
+  color: #8494a7;
+  transform: rotate(0deg);
+  transition: transform 0.22s;
+}
+.nav-parent.open .nav-arrow {
+  transform: rotate(90deg);
+}
+
+.nav-sub {
+  background: var(--sidebar-2);
+  overflow: hidden;
 }
 
 .nav-item {
-  position: relative;
   display: flex;
   align-items: center;
-  gap: 11px;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: var(--r-md);
+  gap: 9px;
+  height: 44px;
+  padding: 0 20px 0 50px;
   color: var(--sidebar-ink);
   font-size: 13px;
-  font-weight: 500;
   transition: background 0.15s, color 0.15s;
 }
-
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--sidebar-3);
   color: #fff;
 }
-
 .nav-item.active {
-  background: var(--brand);
-  color: #fff;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(47, 124, 246, 0.28);
+  background: var(--sidebar-3);
+  color: var(--brand);
+}
+
+.nav-item-icon {
+  flex: none;
+  opacity: 0.85;
+}
+
+.submenu-enter-active,
+.submenu-leave-active {
+  transition: opacity 0.18s ease;
+}
+.submenu-enter-from,
+.submenu-leave-to {
+  opacity: 0;
 }
 
 .sidebar-foot {
   flex: none;
   padding: 12px 16px 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--sidebar-ink-dim);
 }
+
 .foot-status {
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #cfe0f3;
+  color: var(--sidebar-ink);
+  font-size: 12px;
   font-weight: 600;
-  font-size: 11.5px;
 }
+
 .foot-dot {
   width: 7px;
   height: 7px;
@@ -445,34 +595,36 @@ onBeforeUnmount(() => {
   flex: none;
 }
 .foot-dot.on {
-  background: #3ecf7a;
-  box-shadow: 0 0 0 3px rgba(62, 207, 122, 0.15);
+  background: #67c23a;
+  box-shadow: 0 0 0 3px rgba(103, 194, 58, 0.16);
 }
+
 .mock-tag {
   margin-left: auto;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.8px;
-  color: #7fb0ff;
-  background: rgba(77, 141, 255, 0.13);
-  border: 1px solid rgba(96, 155, 245, 0.22);
-  border-radius: 4px;
+  color: #8ab8ff;
+  background: rgba(64, 158, 255, 0.14);
+  border: 1px solid rgba(64, 158, 255, 0.22);
+  border-radius: 3px;
   padding: 1px 5px;
 }
+
 .foot-meta {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 7px;
-  font-size: 10.5px;
+  margin-top: 8px;
+  font-size: 11px;
   color: var(--sidebar-ink-dim);
   font-variant-numeric: tabular-nums;
 }
+
 .foot-copy {
   margin-top: 12px;
   text-align: center;
-  font-size: 10px;
-  line-height: 1.7;
+  font-size: 11px;
   color: #67798f;
 }
 
@@ -481,12 +633,11 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 7px;
   margin-top: 10px;
-  padding: 7px 9px;
-  border-radius: var(--r-md);
+  padding: 6px 9px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.05);
   color: var(--sidebar-ink);
-  font-size: 11.5px;
-  font-weight: 500;
+  font-size: 12px;
 }
 .demo-link:hover {
   background: rgba(255, 255, 255, 0.1);
@@ -498,14 +649,17 @@ onBeforeUnmount(() => {
   margin-left: var(--sidebar-w);
   padding-top: var(--topbar-h);
   min-height: 100vh;
+  background: var(--surface);
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
+
 .content {
   flex: 1;
   min-width: 0;
 }
+
 .scrim {
   display: none;
 }
@@ -518,7 +672,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
   .sidebar {
     transform: translateX(-100%);
     transition: transform 0.24s ease;
@@ -535,7 +689,7 @@ onBeforeUnmount(() => {
     right: 0;
     bottom: 0;
     z-index: 115;
-    background: rgba(10, 20, 35, 0.4);
+    background: rgba(0, 0, 0, 0.35);
   }
   .main {
     margin-left: 0;
@@ -543,12 +697,13 @@ onBeforeUnmount(() => {
   .hamburger {
     display: grid;
   }
-  .crumb,
+  .device-chip,
   .topbar-divider {
     display: none;
   }
   .topbar {
     padding: 0 16px;
+    gap: 10px;
   }
 }
 
@@ -556,8 +711,8 @@ onBeforeUnmount(() => {
   .hide-sm {
     display: none;
   }
-  .save-btn {
-    display: none;
+  .top-btn {
+    padding: 0 8px;
   }
   .user-name {
     display: none;
@@ -565,17 +720,11 @@ onBeforeUnmount(() => {
   .top-actions {
     gap: 8px;
   }
-  .user {
+  .user-menu {
     padding-left: 8px;
   }
-}
-
-@media (max-width: 480px) {
-  .hide-md {
-    display: none;
-  }
   .topbar {
-    gap: 9px;
+    gap: 8px;
     padding: 0 12px;
   }
 }

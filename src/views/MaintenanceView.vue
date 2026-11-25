@@ -603,7 +603,7 @@ onBeforeUnmount(() => {
 .card-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 4px;
   background: var(--surface-3);
   color: var(--ink-2);
   display: grid;
@@ -644,7 +644,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   margin-top: 12px;
   padding: 9px 11px;
-  border-radius: 9px;
+  border-radius: 4px;
   background: var(--brand-soft);
   border: 1px solid var(--brand-line);
   color: var(--brand-strong);
@@ -688,7 +688,7 @@ onBeforeUnmount(() => {
 .version-box {
   padding: 11px 14px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 4px;
   background: var(--surface-2);
   display: flex;
   flex-direction: column;
@@ -706,7 +706,6 @@ onBeforeUnmount(() => {
 .version-box b {
   font-size: 18px;
   color: var(--ink);
-  letter-spacing: -0.3px;
 }
 .version-box em {
   font-style: normal;
@@ -727,13 +726,13 @@ onBeforeUnmount(() => {
   padding: 14px;
   border: 1px solid var(--brand-line);
   background: var(--brand-soft);
-  border-radius: 10px;
+  border-radius: 4px;
 }
 
 /* ---------- STM32 模块升级 ---------- */
 .stm32-table {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 4px;
   overflow-x: auto;
   background: var(--surface);
 }
@@ -815,14 +814,14 @@ onBeforeUnmount(() => {
 }
 .upgrade-progress .progress {
   height: 9px;
-  background: rgba(29, 95, 214, 0.15);
+  background: rgba(64, 158, 255, 0.18);
 }
 .warn-box {
   display: flex;
   gap: 9px;
   margin-top: 16px;
   padding: 11px 13px;
-  border-radius: 9px;
+  border-radius: 4px;
   background: var(--warn-soft);
   border: 1px solid var(--warn-line);
   color: var(--warn);

@@ -140,7 +140,7 @@ onMounted(load)
         <p>按当前告警触发百分比统计</p>
       </div>
       <div class="sum-card">
-        <span class="sum-label">Reset 计数模式</span>
+        <span class="sum-label">归零计数模式</span>
         <b>{{ resetCount }}<small>个</small></b>
         <p>保存后该模块计数归零</p>
       </div>
@@ -184,11 +184,11 @@ onMounted(load)
               </td>
               <td><StatusBadge :tone="statusTone[r.status] || 'muted'" :label="r.status_label" /></td>
               <td><LifeBar :percent="r.life_percent" :threshold="r.alarm_threshold" /></td>
-              <td class="num strong">{{ r.event_count }}</td>
+              <td class="num strong">{{ r.event_count.toLocaleString() }}</td>
               <td>
                 <select v-model="r.reset_mode" class="select sm-select">
-                  <option value="Accumulate">Accumulate（累积）</option>
-                  <option value="Reset">Reset（保存后归零）</option>
+                  <option value="Accumulate">持续累积</option>
+                  <option value="Reset">保存后归零</option>
                 </select>
               </td>
               <td>
@@ -274,17 +274,14 @@ onMounted(load)
   box-shadow: var(--shadow-sm);
 }
 .sum-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.7px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--ink-3);
-  text-transform: uppercase;
 }
 .sum-card b {
   display: block;
   font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.6px;
+  font-weight: 700;
   margin-top: 6px;
   font-variant-numeric: tabular-nums;
 }
@@ -307,7 +304,7 @@ onMounted(load)
 }
 .ch {
   color: var(--ink);
-  font-weight: 800;
+  font-weight: 600;
 }
 .num {
   text-align: right;
@@ -370,7 +367,7 @@ onMounted(load)
 .ex-icon {
   width: 32px;
   height: 32px;
-  border-radius: 9px;
+  border-radius: 4px;
   display: grid;
   place-items: center;
   background: var(--brand-soft);

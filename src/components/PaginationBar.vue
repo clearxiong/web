@@ -82,12 +82,12 @@ function go(p) {
   min-width: 30px;
   height: 30px;
   padding: 0 8px;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink-2);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
