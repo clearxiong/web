@@ -10,7 +10,7 @@ import EmptyState from '../components/EmptyState.vue'
 import { useDeviceStore } from '../stores/device'
 import { useToast } from '../stores/toast'
 import api from '../mock/api'
-import { formatClock, formatDateTime, formatTemp, timeAgo } from '../utils/format'
+import { formatClock, formatTemp, timeAgo } from '../utils/format'
 
 const router = useRouter()
 const toast = useToast()
@@ -87,10 +87,6 @@ onMounted(async () => {
     <div class="page-head">
       <div>
         <h1 class="page-title">设备总览</h1>
-        <p class="page-sub">
-          {{ device?.model || 'Procet SD-504 / SD-524 系列 · 16 通道版本' }} ·
-          序列号 {{ device?.serial || '—' }}
-        </p>
       </div>
       <div class="row">
         <span class="updated">更新于 {{ state.refreshedAt ? formatClock(state.refreshedAt) : '—' }}</span>
@@ -113,14 +109,12 @@ onMounted(async () => {
           unit="次"
           icon="bolt"
           accent="var(--brand)"
-          foot="4 个模块霍尔通道合计"
         />
         <StatCard
           label="在线模块"
           :value="`${device?.online_modules ?? 0}/${device?.total_modules ?? 4}`"
           icon="channels"
           accent="var(--ok)"
-          foot="STM32 采集模块 I²C 在线状态"
         />
         <StatCard
           label="监测通道"
@@ -128,7 +122,6 @@ onMounted(async () => {
           unit="路"
           icon="shield"
           accent="#0f9d8f"
-          foot="4 模块 × 4 接口通道"
         />
         <StatCard
           label="当前异常"
@@ -137,17 +130,13 @@ onMounted(async () => {
           :tone="(device?.fault_count ?? 0) > 0 ? 'warn' : 'ok'"
           icon="alert"
           :accent="(device?.fault_count ?? 0) > 0 ? 'var(--warn)' : 'var(--ok)'"
-          :foot="`异常接口 ${health.fail} 个 · 未知 ${health.unknown} 个`"
         />
       </div>
 
       <div class="grid cols-2 top-cards">
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">设备信息</h3>
-              <p class="card-sub">ESP32 主控与设备识别信息</p>
-            </div>
+            <h3 class="card-title">设备信息</h3>
             <StatusBadge tone="ok" label="运行正常" live />
           </div>
           <div class="card-body">
@@ -177,10 +166,7 @@ onMounted(async () => {
 
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">采集模块状态</h3>
-              <p class="card-sub">4 个 STM32 从机 · I²C 100 kHz</p>
-            </div>
+            <h3 class="card-title">采集模块状态</h3>
             <span class="muted" style="font-size: 12px">0x20 – 0x23</span>
           </div>
           <div class="card-body module-list">
@@ -229,10 +215,7 @@ onMounted(async () => {
       <div class="grid cols-2 bottom-cards">
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">最近事件</h3>
-              <p class="card-sub">按时间倒序，来自事件日志</p>
-            </div>
+            <h3 class="card-title">最近事件</h3>
             <button class="btn sm ghost" @click="goEvents">全部事件<AppIcon name="chevron" :size="13" /></button>
           </div>
           <div class="card-body flush">
@@ -250,10 +233,7 @@ onMounted(async () => {
 
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">健康风险摘要</h3>
-              <p class="card-sub">基于模块寿命余量与监测状态的风险提示</p>
-            </div>
+            <h3 class="card-title">健康风险摘要</h3>
             <AppIcon name="gauge" :size="18" style="color: var(--ink-3)" />
           </div>
           <div class="card-body">

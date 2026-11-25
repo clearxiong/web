@@ -22,8 +22,8 @@ const navGroups = [
     items: [
       { name: 'overview', to: '/', label: '设备总览', icon: 'dashboard' },
       { name: 'channels', to: '/channels', label: '通道状态', icon: 'channels' },
-      { name: 'events', to: '/events', label: '事件历史', icon: 'events' },
-      { name: 'stats', to: '/stats', label: '统计分析', icon: 'stats' }
+      { name: 'stats', to: '/stats', label: '统计分析', icon: 'stats' },
+      { name: 'events', to: '/events', label: '事件历史', icon: 'events' }
     ]
   },
   {
