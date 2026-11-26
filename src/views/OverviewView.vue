@@ -62,6 +62,10 @@ function openChannel(ch) {
   drawerOpen.value = true
 }
 
+function commAgo(m) {
+  return timeAgo(m.last_communication_time).replace('前', '')
+}
+
 function goEvents() {
   router.push({ name: 'events' })
 }
@@ -178,12 +182,8 @@ onMounted(async () => {
               </div>
               <div class="module-fields">
                 <div>
-                  <span>心跳</span>
-                  <b class="mono">{{ m.heartbeat_counter.toLocaleString() }}</b>
-                </div>
-                <div>
                   <span>最近通信</span>
-                  <b>{{ timeAgo(m.last_communication_time) }}</b>
+                  <b>{{ commAgo(m) }}</b>
                 </div>
                 <div>
                   <span>剩余寿命</span>
@@ -193,14 +193,9 @@ onMounted(async () => {
                 </div>
                 <div>
                   <span>事件队列</span>
-                  <b class="mono">{{ m.queue_used }}/{{ m.queue_capacity }}</b>
-                  <div
-                    v-if="m.queue_used > 0"
-                    class="progress"
-                    :class="m.queue_used > m.queue_capacity * 0.7 ? 'warn' : 'ok'"
-                  >
-                    <span :style="{ width: (m.queue_used / m.queue_capacity) * 100 + '%' }"></span>
-                  </div>
+                  <b class="mono" :class="{ warn: m.queue_used > m.queue_capacity * 0.7 }">
+                    {{ m.queue_used }}/{{ m.queue_capacity }}
+                  </b>
                 </div>
               </div>
             </div>
@@ -358,16 +353,27 @@ onMounted(async () => {
   color: var(--ink-2);
 }
 
+.top-cards .card {
+  display: flex;
+  flex-direction: column;
+}
+.top-cards .card-body {
+  flex: 1;
+}
 /* Module grid */
 .module-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 16px 20px;
 }
 .module-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   border: 1px solid var(--line);
   border-radius: 4px;
-  padding: 12px 14px 13px;
+  padding: 12px 14px;
   min-width: 0;
 }
 .module-head {
@@ -407,8 +413,8 @@ onMounted(async () => {
 }
 .module-fields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
 }
 .module-fields > div {
   display: flex;
@@ -431,9 +437,8 @@ onMounted(async () => {
 .module-fields b.danger {
   color: var(--danger);
 }
-.module-fields .progress {
-  height: 4px;
-  margin-top: 2px;
+.module-fields b.warn {
+  color: var(--warn);
 }
 
 /* Recent events */
