@@ -319,17 +319,13 @@ onBeforeUnmount(() => {
     <div class="grid cols-2">
       <section class="card">
         <div class="card-head">
-          <div>
-            <h3 class="card-title">配置导入 / 导出</h3>
-            <p class="card-sub">备份或以文本文件恢复设备配置</p>
-          </div>
+          <h3 class="card-title">配置导入 / 导出</h3>
           <span class="card-icon"><AppIcon name="file" :size="18" /></span>
         </div>
         <div class="card-body">
           <div class="op-block">
             <div class="op-text">
               <b>导出当前配置</b>
-              <p>将系统信息、网络、时间、环境、上报与浪涌设置导出为 JSON 文本文件。</p>
             </div>
             <button class="btn" :disabled="exporting" @click="exportConfig">
               <AppIcon name="download" :size="15" />
@@ -342,7 +338,6 @@ onBeforeUnmount(() => {
           <div class="op-block">
             <div class="op-text">
               <b>导入配置文件</b>
-              <p>选择此前备份的配置文件，导入后将覆盖当前设备设置。</p>
             </div>
             <div class="import-actions">
               <input ref="importInput" class="file-hidden" type="file" accept=".json,.txt,.cfg" @change="onImportChange" />
@@ -361,23 +356,18 @@ onBeforeUnmount(() => {
               <AppIcon name="close" :size="13" />
             </button>
           </div>
-          <p v-else class="hint">支持 JSON / TXT / CFG，最大 1 MB。导入后需重启设备生效。</p>
         </div>
       </section>
 
       <section class="card">
         <div class="card-head">
-          <div>
-            <h3 class="card-title">重启设备</h3>
-            <p class="card-sub">重新启动 ESP32 主控与采集任务</p>
-          </div>
+          <h3 class="card-title">重启设备</h3>
           <span class="card-icon"><AppIcon name="power" :size="18" /></span>
         </div>
         <div class="card-body">
           <div class="op-block">
             <div class="op-text">
               <b>立即重启</b>
-              <p>重启期间采集与 Web 服务会短暂中断，事件与配置不会丢失。</p>
             </div>
             <button class="btn" :disabled="busy" @click="ask('reboot')">
               <AppIcon name="power" :size="15" />重启设备
@@ -387,7 +377,6 @@ onBeforeUnmount(() => {
           <div class="op-block">
             <div class="op-text">
               <b>恢复出厂默认</b>
-              <p>清除自定义系统配置并恢复默认网络参数，事件日志保留。</p>
             </div>
             <button class="btn danger" :disabled="busy" @click="ask('reset')">
               <AppIcon name="factory" :size="15" />恢复默认
@@ -401,10 +390,7 @@ onBeforeUnmount(() => {
 
       <section class="card span-2 upgrade-card">
         <div class="card-head">
-          <div>
-            <h3 class="card-title">固件升级</h3>
-            <p class="card-sub">通过 HTTP 上传固件镜像并升级设备</p>
-          </div>
+          <h3 class="card-title">固件升级</h3>
           <span class="card-icon"><AppIcon name="upload" :size="18" /></span>
         </div>
         <div class="card-body">
@@ -413,12 +399,6 @@ onBeforeUnmount(() => {
               <span>当前版本</span>
               <b class="mono">{{ currentVersion }}</b>
               <em>2026-11-12</em>
-            </div>
-            <AppIcon name="chevron" :size="16" class="version-arrow" />
-            <div class="version-box next">
-              <span>待升级版本</span>
-              <b class="mono">{{ targetVersion }}</b>
-              <em>演示固件</em>
             </div>
             <div class="version-actions">
               <input ref="upgradeInput" class="file-hidden" type="file" accept=".bin" @change="onUpgradeChange" />
@@ -443,22 +423,13 @@ onBeforeUnmount(() => {
               <b class="mono">{{ Math.round(upgradeProgress) }}%</b>
             </div>
             <div class="progress"><span :style="{ width: upgradeProgress + '%' }"></span></div>
-            <p class="hint">升级过程中请勿关闭设备电源。演示环境使用模拟进度。</p>
-          </div>
-
-          <div class="warn-box">
-            <AppIcon name="alert" :size="16" />
-            <p>固件升级过程中请勿断电。升级失败时设备应自动回滚到上一可用版本。</p>
           </div>
         </div>
       </section>
 
       <section class="card span-2 stm32-card">
         <div class="card-head">
-          <div>
-            <h3 class="card-title">避雷模块固件升级</h3>
-            <p class="card-sub">通过 I²C 逐模块烧写 4 个避雷模块的固件</p>
-          </div>
+          <h3 class="card-title">避雷模块固件升级</h3>
           <span class="card-icon"><AppIcon name="channels" :size="18" /></span>
         </div>
         <div class="card-body">
@@ -520,12 +491,6 @@ onBeforeUnmount(() => {
               <b>{{ stm32Selected.length }} / {{ selectableModules.length }}</b>
               <em>仅在线模块可升级</em>
             </div>
-            <AppIcon name="chevron" :size="16" class="version-arrow" />
-            <div class="version-box next">
-              <span>目标版本</span>
-              <b class="mono">v{{ STM32_TARGET }}</b>
-              <em>避雷模块固件</em>
-            </div>
             <div class="version-actions">
               <input ref="stm32Input" class="file-hidden" type="file" accept=".bin,.hex" @change="onStm32Change" />
               <button class="btn" :disabled="stm32Busy" @click="pickStm32">
@@ -549,25 +514,12 @@ onBeforeUnmount(() => {
               <AppIcon name="close" :size="13" />
             </button>
           </div>
-          <p v-else class="hint">
-            支持 .bin / .hex，最大 1 MB。默认勾选固件版本低于 v{{ STM32_TARGET }} 的在线模块。
-          </p>
-
           <div v-if="stm32Busy" class="upgrade-progress">
             <div class="upgrade-top">
               <span>{{ stm32Stage }}</span>
               <b class="mono">{{ stm32Overall }}%</b>
             </div>
             <div class="progress"><span :style="{ width: stm32Overall + '%' }"></span></div>
-            <p class="hint">升级按模块依次进行，请勿关闭设备电源。演示环境使用模拟进度。</p>
-          </div>
-
-          <div class="warn-box">
-            <AppIcon name="alert" :size="16" />
-            <p>
-              模块升级期间对应 4 路通道暂停采集，状态短暂显示为「未知」。升级失败的固件会停留在
-              Bootloader 中等待新固件，需重新发起升级写入。
-            </p>
           </div>
         </div>
       </section>
@@ -619,12 +571,6 @@ onBeforeUnmount(() => {
 .op-text b {
   font-size: 13px;
   color: var(--ink);
-}
-.op-text p {
-  margin-top: 3px;
-  font-size: 11.5px;
-  line-height: 1.65;
-  color: var(--ink-3);
 }
 .import-actions {
   display: flex;
@@ -690,10 +636,6 @@ onBeforeUnmount(() => {
   flex-direction: column;
   min-width: 140px;
 }
-.version-box.next {
-  border-color: var(--brand-line);
-  background: var(--brand-soft);
-}
 .version-box span {
   font-size: 10.5px;
   color: var(--ink-3);
@@ -706,9 +648,6 @@ onBeforeUnmount(() => {
 .version-box em {
   font-style: normal;
   font-size: 10.5px;
-  color: var(--ink-3);
-}
-.version-arrow {
   color: var(--ink-3);
 }
 .version-actions {
@@ -811,25 +750,6 @@ onBeforeUnmount(() => {
 .upgrade-progress .progress {
   height: 9px;
   background: rgba(64, 158, 255, 0.18);
-}
-.warn-box {
-  display: flex;
-  gap: 9px;
-  margin-top: 16px;
-  padding: 11px 13px;
-  border-radius: 4px;
-  background: var(--warn-soft);
-  border: 1px solid var(--warn-line);
-  color: var(--warn);
-}
-.warn-box p {
-  font-size: 11.5px;
-  line-height: 1.65;
-  color: #8a5207;
-}
-.warn-box svg {
-  flex: none;
-  margin-top: 1px;
 }
 .notice {
   display: flex;
