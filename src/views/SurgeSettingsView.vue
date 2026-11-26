@@ -129,26 +129,20 @@ onMounted(load)
       <div class="sum-card">
         <span class="sum-label">平均剩余寿命</span>
         <b>{{ avgLife }}<small>%</small></b>
-        <p>4 个防雷模块的平均值</p>
       </div>
       <div class="sum-card">
         <span class="sum-label">低于告警阈值</span>
         <b class="warn">{{ belowThreshold }}<small>个</small></b>
-        <p>按当前告警触发百分比统计</p>
       </div>
       <div class="sum-card">
         <span class="sum-label">归零计数模式</span>
         <b>{{ resetCount }}<small>个</small></b>
-        <p>保存后该模块计数归零</p>
       </div>
     </div>
 
     <section class="card table-card">
       <div class="card-head">
-        <div>
-          <h3 class="card-title">4 个防雷模块参数</h3>
-          <p class="card-sub">每个 STM32 模块管辖 4 路监测通道，寿命与浪涌计数在模块级</p>
-        </div>
+        <h3 class="card-title">4 个防雷模块参数</h3>
         <span class="dirty-flag" :class="{ on: dirty }">
           <i class="dot" :class="dirty ? 'warn' : 'ok'"></i>
           {{ dirty ? '有未保存的修改' : '设置已保存' }}
@@ -216,34 +210,11 @@ onMounted(load)
           </tbody>
         </table>
       </div>
-      <div class="table-foot">
-        <span>告警日志触发：模块剩余寿命低于设定百分比时写入告警日志，并把进度条标记为红色。</span>
-      </div>
     </section>
 
-    <section class="card explain">
-      <div class="explain-item">
-        <span class="ex-icon"><AppIcon name="gauge" :size="17" /></span>
-        <div>
-          <b>重置计数方式</b>
-          <p>Reset 将模块及其管辖通道的计数器归零；Accumulate 保持当前累计值。修改后点击「保存设置」生效。</p>
-        </div>
-      </div>
-      <div class="explain-item">
-        <span class="ex-icon"><AppIcon name="alert" :size="17" /></span>
-        <div>
-          <b>告警日志触发</b>
-          <p>取值 0–100%，模块剩余寿命低于该百分比时生成告警日志。阈值需结合保护器件试验数据确定。</p>
-        </div>
-      </div>
-      <div class="explain-item">
-        <span class="ex-icon"><AppIcon name="shield" :size="17" /></span>
-        <div>
-          <b>寿命口径</b>
-          <p>4 个防雷模块各自独立计数与估算，依据浪涌计数与额定冲击次数得出，仅用于运维参考，不代表精确剩余寿命。</p>
-        </div>
-      </div>
-    </section>
+    <p class="disclaimer">
+      剩余寿命为依据浪涌计数与额定冲击次数的风险估算，仅用于运维参考，不代表精确剩余寿命。
+    </p>
 
     <ConfirmDialog
       :open="confirmOpen"
@@ -290,11 +261,6 @@ onMounted(load)
   color: var(--ink-3);
   font-weight: 600;
   margin-left: 3px;
-}
-.sum-card p {
-  font-size: 11.5px;
-  color: var(--ink-3);
-  margin-top: 4px;
 }
 .table-card {
   overflow: hidden;
@@ -344,47 +310,10 @@ onMounted(load)
   color: var(--warn);
   font-weight: 600;
 }
-.table-foot {
-  padding: 11px 16px;
-  font-size: 11.5px;
-  color: var(--ink-3);
-  border-top: 1px solid var(--line);
-}
-.explain {
+.disclaimer {
   margin-top: 16px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  padding: 18px;
-}
-.explain-item {
-  display: flex;
-  gap: 11px;
-}
-.ex-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  display: grid;
-  place-items: center;
-  background: var(--brand-soft);
-  color: var(--brand);
-  flex: none;
-}
-.explain-item b {
-  font-size: 12.5px;
-}
-.explain-item p {
-  margin-top: 3px;
-  font-size: 11.5px;
+  font-size: 11px;
   line-height: 1.7;
   color: var(--ink-3);
-}
-
-@media (max-width: 900px) {
-  .explain {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
 }
 </style>
