@@ -159,10 +159,7 @@ onMounted(load)
     <div v-else class="stack">
       <section class="card">
         <div class="card-head">
-          <div>
-            <h3 class="card-title">系统信息</h3>
-            <p class="card-sub">用于识别设备身份与安装位置</p>
-          </div>
+          <h3 class="card-title">系统信息</h3>
           <span class="dirty-flag" :class="{ on: dirty }">
             <i class="dot" :class="dirty ? 'warn' : 'ok'"></i>{{ dirty ? '有未保存的修改' : '已同步' }}
           </span>
@@ -205,10 +202,7 @@ onMounted(load)
       <div class="grid cols-2">
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">系统时间</h3>
-              <p class="card-sub">手动设置或通过 NTP 自动同步</p>
-            </div>
+            <h3 class="card-title">系统时间</h3>
             <StatusBadge tone="ok" :label="form.time.quality === 'TIME_VALID' ? '时间可信' : form.time.quality" />
           </div>
           <div class="card-body">
@@ -246,10 +240,7 @@ onMounted(load)
 
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">IP 地址设置</h3>
-              <p class="card-sub">IPv4 地址可通过 DHCP 或手动配置</p>
-            </div>
+            <h3 class="card-title">IP 地址设置</h3>
             <button class="switch" :class="{ on: form.network.dhcp }" aria-label="DHCP 开关" @click="form.network.dhcp = !form.network.dhcp"></button>
           </div>
           <div class="card-body">
@@ -286,10 +277,7 @@ onMounted(load)
       <div class="grid cols-2">
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">账户与安全</h3>
-              <p class="card-sub">账户与自动登出</p>
-            </div>
+            <h3 class="card-title">账户与安全</h3>
             <AppIcon name="lock" :size="18" style="color: var(--ink-3)" />
           </div>
           <div class="card-body">
@@ -321,10 +309,7 @@ onMounted(load)
 
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">环境设置</h3>
-              <p class="card-sub">温度显示单位</p>
-            </div>
+            <h3 class="card-title">环境设置</h3>
             <AppIcon name="temperature" :size="18" style="color: var(--ink-3)" />
           </div>
           <div class="card-body">
@@ -346,10 +331,7 @@ onMounted(load)
 
       <section class="card">
         <div class="card-head">
-          <div>
-            <h3 class="card-title">数据上报</h3>
-            <p class="card-sub">统一上报接口，支持 HTTP / TCP / MQTT 适配</p>
-          </div>
+          <h3 class="card-title">数据上报</h3>
           <button class="switch" :class="{ on: form.upload.enabled }" aria-label="上报开关" @click="form.upload.enabled = !form.upload.enabled"></button>
         </div>
         <div class="card-body">
