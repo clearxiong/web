@@ -140,8 +140,8 @@ onMounted(async () => {
           <div class="card-body">
             <dl class="info-list">
               <div><dt>设备名称</dt><dd>{{ device?.name || '—' }}</dd></div>
-              <div><dt>系统描述</dt><dd class="muted">{{ device?.description || '—' }}</dd></div>
               <div><dt>MAC 地址</dt><dd class="mono">{{ device?.mac || '—' }}</dd></div>
+              <div class="wide"><dt>系统描述</dt><dd class="muted">{{ device?.description || '—' }}</dd></div>
               <div><dt>ESP32 固件</dt><dd class="mono">{{ device?.firmware }} · {{ device?.firmware_build }}</dd></div>
               <div><dt>运行时间</dt><dd>{{ device?.uptime_text || '—' }}</dd></div>
               <div><dt>系统时间</dt><dd class="mono">{{ device?.system_time || '—' }}</dd></div>
@@ -311,32 +311,29 @@ onMounted(async () => {
 
 /* Device info list */
 .info-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 28px;
   margin: 0;
 }
 .info-list > div {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--line);
+  flex-direction: column;
+  gap: 5px;
   min-width: 0;
 }
-.info-list > div:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.info-list > div.wide {
+  grid-column: span 2;
 }
 .info-list dt {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--ink-3);
-  flex: none;
 }
 .info-list dd {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
-  text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -345,7 +342,6 @@ onMounted(async () => {
 .info-list dd.muted {
   font-weight: 400;
   color: var(--ink-2);
-  font-size: 13px;
 }
 
 /* Module list */
@@ -551,6 +547,14 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .bottom-cards {
     margin-top: 16px;
+  }
+}
+@media (max-width: 640px) {
+  .info-list {
+    grid-template-columns: 1fr;
+  }
+  .info-list > div.wide {
+    grid-column: auto;
   }
 }
 </style>

@@ -99,10 +99,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="page">
     <div class="page-head">
-      <div>
-        <h1 class="page-title">通信诊断</h1>
-        <p class="page-sub">采集模块通信、I²C 总线、存储、网络与系统日志</p>
-      </div>
+      <h1 class="page-title">通信诊断</h1>
       <button class="btn" :disabled="loading" @click="refreshAll">
         <AppIcon name="refresh" :size="15" :class="{ spin: loading }" />
         {{ loading ? '诊断中…' : '刷新诊断' }}

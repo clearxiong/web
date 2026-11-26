@@ -144,10 +144,7 @@ onMounted(load)
 <template>
   <div class="page">
     <div class="page-head">
-      <div>
-        <h1 class="page-title">系统设置</h1>
-        <p class="page-sub">系统信息、时间、网络、账户安全、环境与数据上报配置</p>
-      </div>
+      <h1 class="page-title">系统设置</h1>
       <div class="row">
         <button class="btn" :disabled="!dirty" @click="load">撤销修改</button>
         <button class="btn primary" :disabled="!dirty || saving" @click="askSave">

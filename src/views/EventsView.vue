@@ -131,10 +131,7 @@ onMounted(() => {
 <template>
   <div class="page">
     <div class="page-head">
-      <div>
-        <h1 class="page-title">事件历史</h1>
-        <p class="page-sub">按时间、通道、模块、类型与等级检索浪涌相关事件</p>
-      </div>
+      <h1 class="page-title">事件历史</h1>
       <button class="btn" :disabled="exporting" @click="exportCsv">
         <AppIcon name="download" :size="15" />
         {{ exporting ? '导出中…' : '导出 CSV' }}

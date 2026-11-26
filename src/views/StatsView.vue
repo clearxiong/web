@@ -55,10 +55,7 @@ onMounted(load)
 <template>
   <div class="page">
     <div class="page-head">
-      <div>
-        <h1 class="page-title">统计分析</h1>
-        <p class="page-sub">事件次数、时间趋势、模块对比与异常统计</p>
-      </div>
+      <h1 class="page-title">统计分析</h1>
       <div class="row">
         <span class="updated">统计于 {{ updatedAt ? formatClock(updatedAt) : '—' }}</span>
         <button class="btn" :disabled="loading" @click="load">

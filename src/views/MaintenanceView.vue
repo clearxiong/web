@@ -313,10 +313,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="page">
     <div class="page-head">
-      <div>
-        <h1 class="page-title">维护</h1>
-        <p class="page-sub">配置备份、设备重启、恢复出厂，以及 ESP32 与 STM32 模块固件升级</p>
-      </div>
+      <h1 class="page-title">维护</h1>
       <StatusBadge tone="ok" label="管理员权限" plain />
     </div>
 

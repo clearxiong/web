@@ -115,10 +115,7 @@ onMounted(load)
 <template>
   <div class="page">
     <div class="page-head">
-      <div>
-        <h1 class="page-title">浪涌设置</h1>
-        <p class="page-sub">按防雷模块配置重置计数方式、告警日志触发阈值与安装位置</p>
-      </div>
+      <h1 class="page-title">浪涌设置</h1>
       <div class="row">
         <button class="btn" :disabled="!dirty" @click="revert">撤销修改</button>
         <button class="btn primary" :disabled="!dirty || saving" @click="askSave">
