@@ -376,9 +376,9 @@ function seedConfig() {
       temp_unit: 'C'
     },
     upload: {
-      protocol: 'HTTP',
+      protocol: 'MQTT',
       host: '10.20.0.15',
-      port: 8080,
+      port: 1883,
       interval_seconds: 30,
       enabled: true,
       secret: '••••••••',

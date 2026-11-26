@@ -71,10 +71,7 @@ onMounted(refresh)
 <template>
   <div class="page">
     <div class="page-head">
-      <div>
-        <h1 class="page-title">通道状态</h1>
-        <p class="page-sub">4 个 STM32 模块共 16 个接口通道的实时状态与最近事件</p>
-      </div>
+      <h1 class="page-title">通道状态</h1>
       <div class="row">
         <div class="segmented" role="group" aria-label="视图切换">
           <button :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'">

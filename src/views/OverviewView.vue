@@ -140,7 +140,6 @@ onMounted(async () => {
           <div class="card-body">
             <dl class="info-list">
               <div><dt>设备名称</dt><dd>{{ device?.name || '—' }}</dd></div>
-              <div><dt>型号名称</dt><dd>{{ device?.model || '—' }}</dd></div>
               <div><dt>系统描述</dt><dd class="muted">{{ device?.description || '—' }}</dd></div>
               <div><dt>MAC 地址</dt><dd class="mono">{{ device?.mac || '—' }}</dd></div>
               <div><dt>ESP32 固件</dt><dd class="mono">{{ device?.firmware }} · {{ device?.firmware_build }}</dd></div>
@@ -312,38 +311,41 @@ onMounted(async () => {
 
 /* Device info list */
 .info-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 22px;
   margin: 0;
 }
 .info-list > div {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px dashed var(--line);
+  gap: 18px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
   min-width: 0;
 }
+.info-list > div:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
 .info-list dt {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-3);
   flex: none;
 }
 .info-list dd {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink);
   text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 .info-list dd.muted {
-  font-weight: 500;
-  color: var(--ink-3);
-  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-2);
+  font-size: 13px;
 }
 
 /* Module list */
@@ -546,11 +548,6 @@ onMounted(async () => {
   color: var(--ink-3);
 }
 
-@media (max-width: 1199px) {
-  .info-list {
-    grid-template-columns: 1fr;
-  }
-}
 @media (max-width: 900px) {
   .bottom-cards {
     margin-top: 16px;
