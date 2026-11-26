@@ -2,8 +2,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
-import ChannelCard from '../components/ChannelCard.vue'
-import ChannelDetailDrawer from '../components/ChannelDetailDrawer.vue'
 import StatCard from '../components/StatCard.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -18,8 +16,6 @@ const { state, refresh } = useDeviceStore()
 
 const recentEvents = ref([])
 const refreshing = ref(false)
-const drawerOpen = ref(false)
-const activeChannel = ref(null)
 
 const device = computed(() => state.device)
 const channels = computed(() => state.channels)
@@ -44,6 +40,12 @@ const health = computed(() => {
 
 const healthTotal = computed(() => Math.max(1, modules.value.length))
 
+const statusCounts = computed(() => {
+  const counts = { NORMAL: 0, ALARM: 0, FAIL: 0, OFFLINE: 0, UNKNOWN: 0 }
+  for (const c of channels.value) counts[c.status] = (counts[c.status] || 0) + 1
+  return counts
+})
+
 const canRefresh = computed(() => !refreshing.value && !state.loading)
 
 async function doRefresh() {
@@ -55,11 +57,6 @@ async function doRefresh() {
   } finally {
     refreshing.value = false
   }
-}
-
-function openChannel(ch) {
-  activeChannel.value = ch.channel_id
-  drawerOpen.value = true
 }
 
 function commAgo(m) {
@@ -203,20 +200,19 @@ onMounted(async () => {
         </section>
       </div>
 
-      <div class="section-head">
-        <h2 class="section-title">16 个模块接口通道</h2>
-        <div class="legend">
-          <span><i class="dot ok"></i>正常 / 未触发 / 空闲</span>
-          <span><i class="dot warn"></i>已触发 / 待读取</span>
-          <span><i class="dot danger"></i>接口异常</span>
-          <span><i class="dot"></i>模块离线</span>
-          <span><i class="dot info"></i>未知</span>
+      <section class="card channel-summary">
+        <h3 class="card-title">16 个接口通道</h3>
+        <div class="cs-items">
+          <span class="cs-item"><i class="dot ok"></i>正常 / 未触发 / 空闲 <b>{{ statusCounts.NORMAL }}</b></span>
+          <span class="cs-item"><i class="dot warn"></i>已触发 / 待读取 <b>{{ statusCounts.ALARM }}</b></span>
+          <span class="cs-item"><i class="dot danger"></i>接口异常 <b>{{ statusCounts.FAIL }}</b></span>
+          <span class="cs-item"><i class="dot"></i>模块离线 <b>{{ statusCounts.OFFLINE }}</b></span>
+          <span class="cs-item"><i class="dot info"></i>未知 <b>{{ statusCounts.UNKNOWN }}</b></span>
         </div>
-      </div>
-
-      <div class="grid channels">
-        <ChannelCard v-for="ch in channels" :key="ch.channel_id" :channel="ch" @select="openChannel" />
-      </div>
+        <button class="btn sm ghost cs-link" @click="router.push({ name: 'channels' })">
+          查看全部通道<AppIcon name="chevron" :size="13" />
+        </button>
+      </section>
 
       <div class="grid cols-2 bottom-cards">
         <section class="card">
@@ -287,12 +283,6 @@ onMounted(async () => {
         </section>
       </div>
     </template>
-
-    <ChannelDetailDrawer
-      :open="drawerOpen"
-      :channel-id="activeChannel"
-      @close="drawerOpen = false"
-    />
   </div>
 </template>
 
@@ -549,17 +539,37 @@ onMounted(async () => {
   color: var(--brand);
 }
 
-.legend {
+/* Channel summary */
+.channel-summary {
   display: flex;
-  gap: 14px;
+  align-items: center;
+  gap: 16px 24px;
+  margin-top: 20px;
+  padding: 16px 20px;
   flex-wrap: wrap;
 }
-.legend span {
+.cs-items {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.cs-item {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: var(--ink-3);
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.cs-item b {
+  font-size: 13px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.cs-link {
+  margin-left: auto;
 }
 
 @media (max-width: 900px) {
