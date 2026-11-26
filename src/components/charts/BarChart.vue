@@ -6,7 +6,8 @@ const props = defineProps({
   height: { type: Number, default: 230 },
   color: { type: String, default: 'var(--brand)' },
   unit: { type: String, default: '次' },
-  highlight: { type: String, default: '' }
+  highlight: { type: String, default: '' },
+  caption: { type: String, default: '' }
 })
 
 const wrap = ref(null)
@@ -64,6 +65,8 @@ const dimmed = (d) => props.highlight && d.label !== props.highlight
 <template>
   <div ref="wrap" class="chart">
     <svg :width="width" :height="height" role="img">
+      <text v-if="caption" :x="M.left" :y="12" class="chart-caption">{{ caption }}</text>
+
       <g>
         <template v-for="(t, i) in ticks" :key="i">
           <line
@@ -82,7 +85,7 @@ const dimmed = (d) => props.highlight && d.label !== props.highlight
 
       <g>
         <g v-for="(d, i) in items" :key="d.label" class="bar-group" :class="{ dim: dimmed(d) }">
-          <title>{{ d.label }}：{{ d.value }} {{ unit }}</title>
+          <title>{{ d.title || d.label }}：{{ d.value }} {{ unit }}</title>
           <rect
             :x="x(i) - barW / 2"
             :y="y(d.value)"
@@ -139,6 +142,10 @@ svg {
 }
 .x-label {
   font-size: 10px;
+}
+.chart-caption {
+  font-size: 10px;
+  fill: var(--ink-3);
 }
 .bar-value {
   font-size: 9px;

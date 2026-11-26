@@ -6,7 +6,8 @@ const props = defineProps({
   height: { type: Number, default: 230 },
   color: { type: String, default: '#1d5fd6' },
   unit: { type: String, default: '次' },
-  area: { type: Boolean, default: true }
+  area: { type: Boolean, default: true },
+  caption: { type: String, default: '' }
 })
 
 const wrap = ref(null)
@@ -98,6 +99,8 @@ const showDots = computed(() => props.data.length <= 15)
         </linearGradient>
       </defs>
 
+      <text v-if="caption" :x="M.left" :y="12" class="chart-caption">{{ caption }}</text>
+
       <g>
         <template v-for="(t, i) in ticks" :key="i">
           <line
@@ -175,5 +178,9 @@ svg {
 }
 .x-label {
   font-size: 10px;
+}
+.chart-caption {
+  font-size: 10px;
+  fill: var(--ink-3);
 }
 </style>
