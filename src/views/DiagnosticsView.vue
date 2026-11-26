@@ -115,7 +115,6 @@ onBeforeUnmount(() => {
           :value="`${diag.modules.filter((m) => m.online).length}/4`"
           icon="channels"
           accent="var(--ok)"
-          :foot="`4 个 STM32 从机 · I²C ${diag.system.i2c_speed}`"
         />
         <StatCard
           label="I²C 错误累计"
@@ -124,7 +123,6 @@ onBeforeUnmount(() => {
           icon="diagnostics"
           accent="var(--warn)"
           :tone="diag.i2c_error_total > 0 ? 'warn' : 'ok'"
-          foot="超时、总线错误与重传合计"
         />
         <StatCard
           label="CRC 校验错误"
@@ -133,7 +131,6 @@ onBeforeUnmount(() => {
           icon="shield"
           accent="var(--danger)"
           :tone="diag.crc_error_total > 0 ? 'warn' : 'ok'"
-          foot="协议帧校验失败次数"
         />
         <StatCard
           label="队列待处理"
@@ -141,16 +138,12 @@ onBeforeUnmount(() => {
           unit="条"
           icon="events"
           accent="var(--brand)"
-          foot="4 个模块未确认事件合计"
         />
       </div>
 
       <section class="card rows-card">
         <div class="card-head">
-          <div>
-            <h3 class="card-title">STM32 模块通信状态</h3>
-            <p class="card-sub">ESP32 为唯一 I²C 主机，单模块离线不影响其他模块</p>
-          </div>
+          <h3 class="card-title">STM32 模块通信状态</h3>
           <span class="muted" style="font-size: 12px">最近通信自动刷新</span>
         </div>
         <div class="table-wrap">
@@ -198,18 +191,12 @@ onBeforeUnmount(() => {
             </tbody>
           </table>
         </div>
-        <div class="table-foot">
-          最近一次通信时间基于 ESP32 心跳巡检；队列剩余量低时会写入系统日志。
-        </div>
       </section>
 
       <div class="grid cols-2 mid-grid">
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">存储使用情况</h3>
-              <p class="card-sub">事件日志 / 统计 / 配置 / 系统日志分区</p>
-            </div>
+            <h3 class="card-title">存储使用情况</h3>
             <AppIcon name="database" :size="18" style="color: var(--ink-3)" />
           </div>
           <div class="card-body">
@@ -233,10 +220,7 @@ onBeforeUnmount(() => {
 
         <section class="card">
           <div class="card-head">
-            <div>
-              <h3 class="card-title">网络与主控</h3>
-              <p class="card-sub">ESP32 运行状态与连接信息</p>
-            </div>
+            <h3 class="card-title">网络与主控</h3>
             <StatusBadge tone="ok" label="网络已连接" live />
           </div>
           <div class="card-body">
@@ -258,10 +242,7 @@ onBeforeUnmount(() => {
 
       <section class="card log-card">
         <div class="card-head">
-          <div>
-            <h3 class="card-title">系统日志（Syslog）</h3>
-            <p class="card-sub">通信恢复、存储异常与维护操作记录</p>
-          </div>
+          <h3 class="card-title">系统日志（Syslog）</h3>
           <div class="row">
             <select v-model="logLevel" class="select log-select" @change="onLevelChange">
               <option value="">全部级别</option>
@@ -366,12 +347,6 @@ td.num {
   font-size: 10.5px;
   color: var(--ink-3);
   white-space: nowrap;
-}
-.table-foot {
-  padding: 11px 16px;
-  font-size: 11.5px;
-  color: var(--ink-3);
-  border-top: 1px solid var(--line);
 }
 
 .storage-list {
