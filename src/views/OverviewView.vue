@@ -166,29 +166,43 @@ onMounted(async () => {
             <h3 class="card-title">采集模块状态</h3>
             <span class="muted" style="font-size: 12px">0x20 – 0x23</span>
           </div>
-          <div class="card-body module-list">
-            <div v-for="m in modules" :key="m.module_id" class="module-row">
-              <span class="mod-id">M{{ m.module_id }}</span>
-              <div class="mod-main">
-                <div class="mod-title">
-                  <b>模块 {{ m.module_id }}</b>
-                  <span class="mono">{{ m.address }} · FW {{ m.firmware }}</span>
+          <div class="card-body module-grid">
+            <div v-for="m in modules" :key="m.module_id" class="module-card">
+              <div class="module-head">
+                <span class="mod-id">M{{ m.module_id }}</span>
+                <b>模块 {{ m.module_id }}</b>
+                <span class="mod-state" :class="{ off: !m.online }">
+                  <i class="dot" :class="m.online ? 'ok' : 'danger'"></i>
+                  {{ m.online ? '在线' : '离线' }}
+                </span>
+              </div>
+              <div class="module-fields">
+                <div>
+                  <span>心跳</span>
+                  <b class="mono">{{ m.heartbeat_counter.toLocaleString() }}</b>
                 </div>
-                <div class="mod-meta">
-                  <span>心跳 {{ m.heartbeat_counter.toLocaleString() }}</span>
-                  <span>{{ timeAgo(m.last_communication_time) }}</span>
-                  <span class="mod-life" :class="m.life_percent < m.alarm_threshold ? 'danger' : ''">
-                    剩余寿命 {{ Math.round(m.life_percent) }}%
-                  </span>
+                <div>
+                  <span>最近通信</span>
+                  <b>{{ timeAgo(m.last_communication_time) }}</b>
                 </div>
-                <div class="queue">
-                  <span class="queue-label">事件队列 {{ m.queue_used }}/{{ m.queue_capacity }}</span>
-                  <div class="progress" :class="m.queue_used > m.queue_capacity * 0.7 ? 'warn' : 'ok'">
+                <div>
+                  <span>剩余寿命</span>
+                  <b :class="{ danger: m.life_percent < m.alarm_threshold }">
+                    {{ Math.round(m.life_percent) }}%
+                  </b>
+                </div>
+                <div>
+                  <span>事件队列</span>
+                  <b class="mono">{{ m.queue_used }}/{{ m.queue_capacity }}</b>
+                  <div
+                    v-if="m.queue_used > 0"
+                    class="progress"
+                    :class="m.queue_used > m.queue_capacity * 0.7 ? 'warn' : 'ok'"
+                  >
                     <span :style="{ width: (m.queue_used / m.queue_capacity) * 100 + '%' }"></span>
                   </div>
                 </div>
               </div>
-              <StatusBadge :tone="m.online ? 'ok' : 'muted'" :label="m.online ? '在线' : '离线'" />
             </div>
           </div>
         </section>
@@ -344,83 +358,82 @@ onMounted(async () => {
   color: var(--ink-2);
 }
 
-/* Module list */
-.module-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 10px;
-  padding-bottom: 12px;
+/* Module grid */
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
 }
-.module-row {
+.module-card {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 12px 14px 13px;
+  min-width: 0;
+}
+.module-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line);
+  gap: 8px;
+  margin-bottom: 12px;
 }
-.module-row:last-child {
-  border-bottom: none;
+.module-head b {
+  font-size: 13px;
+  color: var(--ink);
 }
 .mod-id {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 4px;
   display: grid;
   place-items: center;
   background: var(--surface-3);
   color: var(--ink-2);
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: 12px;
   flex: none;
 }
-.mod-main {
-  flex: 1;
-  min-width: 0;
-}
-.mod-title {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-}
-.mod-title b {
-  font-size: 13px;
-}
-.mod-title span {
-  font-size: 10.5px;
-  color: var(--ink-3);
-}
-.mod-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 11px;
-  color: var(--ink-3);
-  margin: 2px 0 6px;
-}
-.mod-life {
+.mod-state {
   margin-left: auto;
-  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
   white-space: nowrap;
 }
-.mod-life.danger {
+.mod-state.off {
   color: var(--danger);
   font-weight: 600;
 }
-.queue {
+.module-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+.module-fields > div {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
-.queue-label {
-  font-size: 10.5px;
+.module-fields span {
+  font-size: 11.5px;
   color: var(--ink-3);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
 }
-.queue .progress {
-  flex: 1;
+.module-fields b {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.module-fields b.danger {
+  color: var(--danger);
+}
+.module-fields .progress {
   height: 4px;
+  margin-top: 2px;
 }
 
 /* Recent events */
@@ -547,6 +560,16 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .bottom-cards {
     margin-top: 16px;
+  }
+}
+@media (max-width: 1200px) {
+  .grid.cols-2.top-cards {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .module-grid {
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 640px) {
