@@ -85,9 +85,7 @@ onMounted(async () => {
 <template>
   <div class="page">
     <div class="page-head">
-      <div>
-        <h1 class="page-title">设备总览</h1>
-      </div>
+      <h1 class="page-title">设备总览</h1>
       <div class="row">
         <span class="updated">更新于 {{ state.refreshedAt ? formatClock(state.refreshedAt) : '—' }}</span>
         <button class="btn" :disabled="!canRefresh" @click="doRefresh">
