@@ -26,7 +26,7 @@ const filters = reactive({
 })
 
 const page = ref(1)
-const pageSize = 20
+const pageSize = 10
 const total = ref(0)
 const pageCount = ref(1)
 const items = ref([])
