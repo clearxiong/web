@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import BrandLogo from '../components/BrandLogo.vue'
 import { useAuth } from '../stores/auth'
 import { useToast } from '../stores/toast'
 
@@ -43,8 +44,9 @@ async function onSubmit() {
   <div class="login-page procet-login">
     <div class="login-container">
       <div class="title-box">
-        <p class="login-title">Procet 设备管理</p>
-        <p class="login-sub">16 通道智能防雷监测终端 · 本地 Web 管理</p>
+        <BrandLogo class="login-brand" dark :size="34" :word-size="24" />
+        <p class="login-title">16 通道智能防雷监测终端</p>
+        <p class="login-sub">本地 Web 管理</p>
       </div>
 
       <form class="login-form" @submit.prevent="onSubmit">
@@ -119,6 +121,10 @@ async function onSubmit() {
 .title-box {
   text-align: center;
   margin-bottom: 32px;
+}
+
+.login-brand {
+  margin-bottom: 20px;
 }
 
 .login-title {
