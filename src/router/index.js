@@ -25,7 +25,7 @@ const routes = [
     children: [
       { path: '', name: 'overview', component: OverviewView, meta: { title: '设备总览' } },
       { path: 'channels', name: 'channels', component: ChannelsView, meta: { title: '通道状态' } },
-      { path: 'events', name: 'events', component: EventsView, meta: { title: '事件历史' } },
+      { path: 'events', name: 'events', component: EventsView, meta: { title: '事件记录' } },
       { path: 'stats', name: 'stats', component: StatsView, meta: { title: '统计分析' } },
       {
         path: 'surge-settings',

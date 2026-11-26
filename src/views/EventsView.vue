@@ -131,7 +131,7 @@ onMounted(() => {
 <template>
   <div class="page">
     <div class="page-head">
-      <h1 class="page-title">事件历史</h1>
+      <h1 class="page-title">事件记录</h1>
       <button class="btn" :disabled="exporting" @click="exportCsv">
         <AppIcon name="download" :size="15" />
         {{ exporting ? '导出中…' : '导出 CSV' }}

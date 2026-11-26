@@ -17,17 +17,23 @@ const toast = useToast()
 
 const navGroups = [
   {
-    title: '设备监测',
+    title: '设备状态',
     icon: 'dashboard',
     items: [
       { name: 'overview', to: '/', label: '设备总览', icon: 'dashboard' },
-      { name: 'channels', to: '/channels', label: '通道状态', icon: 'channels' },
-      { name: 'stats', to: '/stats', label: '统计分析', icon: 'stats' },
-      { name: 'events', to: '/events', label: '事件历史', icon: 'events' }
+      { name: 'channels', to: '/channels', label: '通道状态', icon: 'channels' }
     ]
   },
   {
-    title: '参数配置',
+    title: '数据记录',
+    icon: 'database',
+    items: [
+      { name: 'events', to: '/events', label: '事件记录', icon: 'events' },
+      { name: 'stats', to: '/stats', label: '统计分析', icon: 'stats' }
+    ]
+  },
+  {
+    title: '设备配置',
     icon: 'settings',
     items: [
       { name: 'surge-settings', to: '/surge-settings', label: '浪涌设置', icon: 'shield' },
@@ -35,7 +41,7 @@ const navGroups = [
     ]
   },
   {
-    title: '诊断运维',
+    title: '运维管理',
     icon: 'maintenance',
     items: [
       { name: 'diagnostics', to: '/diagnostics', label: '通信诊断', icon: 'diagnostics' },
