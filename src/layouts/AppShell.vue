@@ -257,10 +257,6 @@ onBeforeUnmount(() => {
           <span>固件 {{ deviceState.device?.firmware || 'v1.0.0' }}</span>
           <span>Boot #{{ deviceState.device?.boot_id ?? '—' }}</span>
         </div>
-        <RouterLink to="/aetek/login" class="demo-link">
-          <AppIcon name="shield" :size="13" />
-          AETEK SD-504 演示
-        </RouterLink>
         <p class="foot-copy">Copyright © 2026 Procet</p>
       </div>
     </aside>
@@ -626,22 +622,6 @@ onBeforeUnmount(() => {
   text-align: center;
   font-size: 11px;
   color: #67798f;
-}
-
-.demo-link {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 10px;
-  padding: 6px 9px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--sidebar-ink);
-  font-size: 12px;
-}
-.demo-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
 }
 
 /* ---------- Main ---------- */
