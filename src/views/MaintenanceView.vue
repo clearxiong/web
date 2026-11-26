@@ -178,7 +178,7 @@ const dialog = computed(() => {
   }
   if (action.value === 'stm32') {
     return {
-      title: '升级 STM32 模块固件？',
+      title: '升级避雷模块固件？',
       message: `将向 M${stm32Selected.value.join(' / M')} 共 ${stm32Selected.value.length} 个模块写入「${stm32File.value?.name || '所选固件'}」，目标版本 v${STM32_TARGET}。`,
       detail: '升级按模块依次进行，期间对应 4 路通道暂停采集，状态短暂显示为「未知」。',
       confirmText: '开始升级',
@@ -230,7 +230,7 @@ async function exportConfig() {
     const text = await api.exportConfig()
     downloadFile(`sd16-config-${new Date().toISOString().slice(0, 10)}.json`, text, 'application/json')
     toast.success('配置文件已导出')
-    await api.log('INFO', 'system', '管理员导出了设备配置')
+    await api.log('INFO', 'system', '导出了设备配置')
   } finally {
     exporting.value = false
   }
@@ -255,7 +255,7 @@ async function onConfirm() {
       await api.factoryReset()
       toast.success('已恢复出厂默认配置')
     } else if (action.value === 'import') {
-      await api.log('WARN', 'system', `管理员导入了配置文件：${importFile.value?.name || '未知文件'}`)
+      await api.log('WARN', 'system', `导入了配置文件：${importFile.value?.name || '未知文件'}`)
       await new Promise((r) => setTimeout(r, 500))
       toast.success('配置导入成功，请重启设备使其生效')
       importFile.value = null
@@ -314,7 +314,6 @@ onBeforeUnmount(() => {
   <div class="page">
     <div class="page-head">
       <h1 class="page-title">维护</h1>
-      <StatusBadge tone="ok" label="管理员权限" plain />
     </div>
 
     <div class="grid cols-2">
@@ -457,8 +456,8 @@ onBeforeUnmount(() => {
       <section class="card span-2 stm32-card">
         <div class="card-head">
           <div>
-            <h3 class="card-title">STM32 模块固件升级</h3>
-            <p class="card-sub">通过 I²C 逐模块烧写 4 个采集模块的 STM32 从机固件</p>
+            <h3 class="card-title">避雷模块固件升级</h3>
+            <p class="card-sub">通过 I²C 逐模块烧写 4 个避雷模块的固件</p>
           </div>
           <span class="card-icon"><AppIcon name="channels" :size="18" /></span>
         </div>
@@ -525,7 +524,7 @@ onBeforeUnmount(() => {
             <div class="version-box next">
               <span>目标版本</span>
               <b class="mono">v{{ STM32_TARGET }}</b>
-              <em>STM32 从机固件</em>
+              <em>避雷模块固件</em>
             </div>
             <div class="version-actions">
               <input ref="stm32Input" class="file-hidden" type="file" accept=".bin,.hex" @change="onStm32Change" />
@@ -577,7 +576,7 @@ onBeforeUnmount(() => {
     <section class="notice">
       <AppIcon name="info" :size="17" />
       <p>
-        维护操作需要管理员授权，执行前均会二次确认。演示环境中的所有操作均为 mock，
+        维护操作执行前均会二次确认。演示环境中的所有操作均为 mock，
         不会真正重启设备或写入固件，但会写入系统日志以便在「通信诊断」中查看。
       </p>
     </section>

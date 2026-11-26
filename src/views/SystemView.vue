@@ -288,7 +288,7 @@ onMounted(load)
           <div class="card-head">
             <div>
               <h3 class="card-title">账户与安全</h3>
-              <p class="card-sub">管理员账户与自动登出</p>
+              <p class="card-sub">账户与自动登出</p>
             </div>
             <AppIcon name="lock" :size="18" style="color: var(--ink-3)" />
           </div>
@@ -397,7 +397,7 @@ onMounted(load)
       <section class="notice">
         <AppIcon name="info" :size="17" />
         <p>
-          配置修改需管理员授权，保存前会进行参数范围校验。网络配置与上报密钥不在此页面明文展示；
+          配置修改保存前会进行参数范围校验。网络配置与上报密钥不在此页面明文展示；
           配置写入后需确认保存才生效。
         </p>
       </section>
